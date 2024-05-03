@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@electron/fuses": "^1.7.0",
+    "bufferutil": "^4.0.8",
     "chokidar": "^3.5.3",
     "dexie": "^3.0.3",
     "dragula": "github:minbrowser/dragula",
@@ -41,7 +42,9 @@
     "quick-score": "^0.2.0",
     "regedit": "^3.0.3",
     "sortablejs": "^1.15.1",
-    "stemmer": "^1.0.5"
+    "stemmer": "^1.0.5",
+    "utf-8-validate": "^6.0.3",
+    "web3": "^4.8.0"
   },
   "devDependencies": {
     "archiver": "^4.0.1",

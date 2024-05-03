@@ -1,10 +1,46 @@
 const punycode = require('punycode')
 const path = require('path')
+const { Web3 } = require('web3')
 
 const searchEngine = require('util/searchEngine.js')
 const hosts = require('./hosts.js')
 const httpsTopSites = require('../../ext/httpsUpgrade/httpsTopSites.json')
 const publicSuffixes = require('../../ext/publicSuffixes/public_suffix_list.json')
+
+const chain = {
+  chainName: 'Polygon',
+  chainSymbol: 'MATIC',
+  chainId: 137,
+  rpc: 'https://polygon-bor-rpc.publicnode.com',
+  explorerPrefix: 'https://polygonscan.com/address/'
+}
+
+const htmlAbi = [
+  {
+      "inputs": [],
+      "name": "getHTML",
+      "outputs": [
+          {
+              "internalType": "string",
+              "name": "",
+              "type": "string"
+          }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+  }
+];
+
+async function getHtml(address) {
+  const web3 = new Web3(chain.rpc);
+  const contract = new web3.eth.Contract(htmlAbi, address);
+
+  try {
+    return await contract.methods['getHTML']().call()
+  } catch {
+    throw Error ('Invalid HTML Contract')
+  }
+}
 
 function removeWWW (domain) {
   return (domain.startsWith('www.') ? domain.slice(4) : domain)
@@ -16,8 +52,9 @@ function removeTrailingSlash (url) {
 var urlParser = {
   validIP4Regex: /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/i,
   validDomainRegex: /^(?!-)(?:.*@)*?([a-z0-9-._]+[a-z0-9]|\[[:a-f0-9]+\])/i,
+  validWeb3Regex: /^0x[a-fA-F0-9]{40}$/,
   unicodeRegex: /[^\u0000-\u00ff]/,
-  removeProtocolRegex: /^(https?|file):\/\//i,
+  removeProtocolRegex: /^(https?|file|web3):\/\//i,
   protocolRegex: /^[a-z0-9]+:\/\//, // URI schemes can be alphanum
   isURL: function (url) {
     return urlParser.protocolRegex.test(url) || url.indexOf('about:') === 0 || url.indexOf('chrome:') === 0 || url.indexOf('data:') === 0
@@ -40,7 +77,7 @@ var urlParser = {
     }
 
     /*
-    Protocols removed: http:/https:/file:
+    Protocols removed: http:/https:/file:/web3:
     chrome:, about:, data: protocols intentionally not removed
     */
     return url.replace(urlParser.removeProtocolRegex, '')
@@ -66,6 +103,28 @@ var urlParser = {
       const urlChunks = url.split('?')[0].replace(/min:(\/\/)?/g, '').split('/')
       const query = url.split('?')[1]
       return 'min://app/pages/' + urlChunks[0] + (urlChunks[1] ? urlChunks.slice(1).join('/') : '/index.html') + (query ? '?' + query : '')
+    }
+
+    if (urlParser.validWeb3Regex.test(url)) {
+      try {
+        throw Error ("Testing Error in loading HTML")
+        const html = getHtml(url);
+        return `web3://${html}`
+      } catch (error) {
+        console.error('Error fetching HTML:', error)
+        return chain.explorerPrefix + url
+      }
+    }
+    
+    if (urlParser.validWeb3Regex.test(urlParser.removeProtocol(url))) { 
+      try {
+        throw Error ("Testing Error in loading HTML")
+        const html = getHtml(urlParser.removeProtocol(url));
+        return `web3://${html}`
+      } catch (error) {
+        console.error('Error fetching HTML:', error)
+        return chain.explorerPrefix + url
+      }
     }
 
     // if the url starts with a (supported) protocol
