@@ -1,12 +1,13 @@
 const punycode = require('punycode')
 const path = require('path')
-// const { Web3 } = require('web3')
 
 const searchEngine = require('util/searchEngine.js')
 const hosts = require('./hosts.js')
 const httpsTopSites = require('../../ext/httpsUpgrade/httpsTopSites.json')
 const publicSuffixes = require('../../ext/publicSuffixes/public_suffix_list.json')
 const { error } = require('console')
+
+const { Web3 } = require('web3')
 
 const chain = {
   chainName: 'Polygon',
@@ -16,45 +17,7 @@ const chain = {
   explorerPrefix: 'https://polygonscan.com/address/'
 }
 
-const showExplorer = true;
-
-// const htmlAbi = [
-//   {
-//       "inputs": [],
-//       "name": "getHTML",
-//       "outputs": [
-//           {
-//               "internalType": "string",
-//               "name": "",
-//               "type": "string"
-//           }
-//       ],
-//       "stateMutability": "view",
-//       "type": "function"
-//   }
-// ];
-
-// function isHtmlContract(address) {
-//   const web3 = new Web3(chain.rpc);
-//   const contract = new web3.eth.Contract(htmlAbi, address);
-
-//   // try {
-//   //   const html = await contract.methods['getHTML']().call()
-//   //   console.log(html)
-//   //   return html.length > 0
-//   // } catch {
-//   //   console.error(address + ' Not HTML Contract')
-//   //   return false
-//   // }
-
-//   contract.methods['getHTML']().call()
-//     .then(result => {
-//       return result.length > 0
-//     })
-//     .catch(error => {
-//       throw Error ('No getHTML function found:' + error)
-//     })
-// }
+const showExplorer = false;
 
 function removeWWW (domain) {
   return (domain.startsWith('www.') ? domain.slice(4) : domain)
@@ -120,57 +83,12 @@ var urlParser = {
     }
 
     if (urlParser.validWeb3Regex.test(urlParser.removeProtocol(url))) {
-      console.log('isEthereumAddress')
       if (showExplorer) {
         return chain.explorerPrefix + urlParser.removeProtocol(url)
       } else {
         return 'web3://' + urlParser.removeProtocol(url)
       }
     }
-
-    // if (urlParser.validWeb3Regex.test(url)) {
-    //   // getHtml(url)
-    //   //   .then(result => function() {
-    //   //     return `web3://${result}`
-
-    //   //   })
-    //   //   .catch(error => function() {
-    //   //     console.error(error)
-    //   //     return chain.explorerPrefix + url
-
-    //   //   })
-    //   try {
-    //     throw Error ("Testing Error in loading HTML")
-    //     const html = getHtml(url);
-    //     return `web3://${html}`
-    //   } catch (error) {
-    //     console.error('Error fetching HTML:', error)
-    //     return chain.explorerPrefix + url
-    //   }
-    // }
-    
-    // if (urlParser.validWeb3Regex.test(urlParser.removeProtocol(url))) { 
-    //   // getHtml(urlParser.removeProtocol(url))
-    //   //   .then(result => function() {
-    //   //     console.log(result)
-    //   //     return `web3://${result}`
-
-    //   //   })
-    //   //   .catch(error => function() {
-    //   //     console.error(error)
-    //   //     return chain.explorerPrefix + urlParser.removeProtocol(url)
-
-    //   //   })
-
-    //   try {
-    //     throw Error ("Testing Error in loading HTML")
-    //     const html = getHtml(urlParser.removeProtocol(url));
-    //     return `web3://${html}`
-    //   } catch (error) {
-    //     console.error('Error fetching HTML:', error)
-    //     return chain.explorerPrefix + urlParser.removeProtocol(url)
-    //   }
-    // }
 
     // if the url starts with a (supported) protocol
     if (urlParser.isURL(url)) {
