@@ -36,7 +36,7 @@ const contractABI = [
 ]; // HTML Required ABI
 
 
-export async function getHTML(contractAddress) {
+async function getHTML(contractAddress) {
     const contract = new web3.eth.Contract(contractABI, contractAddress);
     try {
         // Check if contract contains the getHTML method
@@ -49,7 +49,7 @@ export async function getHTML(contractAddress) {
     }
 }
 
-export async function getOwner(contractAddress) {
+async function getOwner(contractAddress) {
     const contract = new web3.eth.Contract(contractABI, contractAddress);
     try {
         // Check if contract contains the getHTML method
@@ -60,4 +60,6 @@ export async function getOwner(contractAddress) {
         console.error('Error calling smart contract:', error);
     }
 }
+
+getHTML('0x53681D337b9ACd156ce335eA96aF05298FE700aF')
 
