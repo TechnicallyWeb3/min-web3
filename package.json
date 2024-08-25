@@ -44,7 +44,7 @@
     "sortablejs": "^1.15.1",
     "stemmer": "^1.0.5",
     "utf-8-validate": "^6.0.3",
-    "web3": "^4.8.0"
+    "web3": "^4.12.1"
   },
   "devDependencies": {
     "archiver": "^4.0.1",

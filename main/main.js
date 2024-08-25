@@ -203,6 +203,7 @@ function createWindowWithBounds (bounds) {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
+      webSecurity: false, // Disables the security restriction
       nodeIntegrationInWorker: true, // used by ProcessSpawner
       additionalArguments: [
         '--user-data-path=' + userDataPath,
