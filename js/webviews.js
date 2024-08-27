@@ -29,7 +29,14 @@ function captureCurrentTab (options) {
 
 // called whenever a new page starts loading, or an in-page navigation occurs
 function onPageURLChange (tab, url) {
-  if (url.indexOf('https://') === 0 || url.indexOf('about:') === 0 || url.indexOf('chrome:') === 0 || url.indexOf('file://') === 0 || url.indexOf('min://') === 0) {
+  if (
+    url.indexOf('https://') === 0 || 
+    // url.indexOf('web3://') === 0 || 
+    url.indexOf('about:') === 0 || 
+    url.indexOf('chrome:') === 0 || 
+    url.indexOf('file://') === 0 || 
+    url.indexOf('min://') === 0
+  ) {
     tabs.update(tab, {
       secure: true,
       url: url
@@ -486,6 +493,12 @@ webviews.bindIPC('downloadFile', function (tabId, args) {
     webviews.callAsync(tabId, 'downloadURL', [args[0]])
   }
 })
+
+// webviews.bindIPC('getWeb3HTML', function (tabId, args) {
+//   if (tabs.get(tabId).url.startsWith('web3://')) {
+//     webviews.callAsync(tabId, 'contractHTML', [args[0]])
+//   }
+// })
 
 ipc.on('view-event', function (e, args) {
   webviews.emitEvent(args.event, args.tabId, args.args)

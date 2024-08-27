@@ -50,6 +50,7 @@ class TabList {
     }
     const index = this.getIndex(id)
 
+    console.log("update called")
     for (var key in data) {
       if (data[key] === undefined) {
         throw new ReferenceError('Key ' + key + ' is undefined.')
