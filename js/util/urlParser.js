@@ -6,6 +6,7 @@ const httpsTopSites = require('../../ext/httpsUpgrade/httpsTopSites.json');
 const publicSuffixes = require('../../ext/publicSuffixes/public_suffix_list.json');
 const { Web3 } = require('web3');
 const { fetchContractHTML } = require('./web3Helpers.js');
+const { ipcRenderer } = require('electron')
 
 const chain = {
   chainName: 'Polygon',
@@ -25,14 +26,24 @@ function removeTrailingSlash(url) {
   return (url.endsWith('/') ? url.slice(0, -1) : url);
 }
 
-// This function will be called to load HTML content
 function renderHTML(htmlData) {
   if (typeof window !== 'undefined') {
-    document.open();
-    document.write(htmlData);
-    document.close();
+    const container = document.getElementById('webviews');
+    if (container) {
+      try {
+        console.log('Data to be sent:', htmlData); // Log the data
+        const serializableData = typeof htmlData === 'string' ? htmlData : JSON.stringify(htmlData);
+        ipcRenderer.send('loadHTMLInView', { html: serializableData });
+      } catch (error) {
+        console.error('Error sending data to IPC:', error);
+      }
+    } else {
+      console.error('Container not found!');
+    }
   }
 }
+
+
 
 var urlParser = {
   validIP4Regex: /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/i,

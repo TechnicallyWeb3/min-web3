@@ -356,21 +356,30 @@ ipc.on('hideCurrentView', function (e) {
   hideCurrentView(e.sender)
 })
 
-function loadURLInView (id, url, win) {
-  // wait until the first URL is loaded to set the background color so that new tabs can use a custom background
-  if (!viewStateMap[id].loadedInitialURL) {
-    // Give the site a chance to display something before setting the background, in case it has its own dark theme
-    viewMap[id].webContents.once('dom-ready', function() {
-      viewMap[id].setBackgroundColor('#fff')
-    })
-    // If the view has no URL, it won't be attached yet
-    if (win && id === windows.getState(win).selectedView) {
-      win.setBrowserView(viewMap[id])
+function loadURLInView(id, url, win) {
+  // Check if the URL is actually HTML data (e.g., starts with 'data:text/html')
+  if (url.startsWith('data:text/html')) {
+    const htmlData = decodeURIComponent(url.split(',')[1]);
+
+    // Inject HTML directly into the webview
+    viewMap[id].webContents.executeJavaScript(`document.documentElement.innerHTML = ${JSON.stringify(htmlData)}`);
+  } else {
+    // Original code path for regular URLs
+    if (!viewStateMap[id].loadedInitialURL) {
+      viewMap[id].webContents.once('dom-ready', function() {
+        viewMap[id].setBackgroundColor('#fff');
+      });
+
+      if (win && id === windows.getState(win).selectedView) {
+        win.setBrowserView(viewMap[id]);
+      }
     }
+
+    viewMap[id].webContents.loadURL(url);
+    viewStateMap[id].loadedInitialURL = true;
   }
-  viewMap[id].webContents.loadURL(url)
-  viewStateMap[id].loadedInitialURL = true
 }
+
 
 ipc.on('loadURLInView', function (e, args) {
   const win = windows.windowFromContents(e.sender)?.win

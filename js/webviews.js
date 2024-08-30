@@ -496,6 +496,17 @@ ipc.on('async-call-result', function (e, args) {
   delete webviews.asyncCallbacks[args.callId]
 })
 
+ipc.on('loadHTMLInView', function (e, args) {
+  const tabId = tabData.id;
+  const htmlData = JSON.parse(args.html); ;
+  console.log("Weorking");
+  
+
+  webviews.callAsync(tabId, 'executeJavaScript', `document.documentElement.innerHTML = ${JSON.stringify(htmlData)}`);
+});
+
+
+
 ipc.on('view-ipc', function (e, args) {
   if (!webviews.hasViewForTab(args.id)) {
     // the view could have been destroyed between when the event was occured and when it was recieved in the UI process, see https://github.com/minbrowser/min/issues/604#issuecomment-419653437
