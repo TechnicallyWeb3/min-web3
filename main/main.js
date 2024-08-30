@@ -23,6 +23,17 @@ crashReporter.start({
   compress: true
 })
 
+ipc.on('loadHTMLInView', (event, { html }) => {
+  console.log('HTML data received in main process:', html);
+  try {
+    console.log(html);
+    // Perform actions with htmlData, like sending it back to a specific webview
+    event.sender.send('renderHTMLInView', html);
+  } catch (error) {
+    console.error('Error parsing HTML data:', error);
+  }
+});
+
 if (process.argv.some(arg => arg === '-v' || arg === '--version')) {
   console.log('Min: ' + app.getVersion())
   console.log('Chromium: ' + process.versions.chrome)

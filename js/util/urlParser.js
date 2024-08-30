@@ -27,22 +27,14 @@ function removeTrailingSlash(url) {
 }
 
 function renderHTML(htmlData) {
-  if (typeof window !== 'undefined') {
-    const container = document.getElementById('webviews');
-    if (container) {
-      try {
-        console.log('Data to be sent:', htmlData); // Log the data
-        const serializableData = typeof htmlData === 'string' ? htmlData : JSON.stringify(htmlData);
-        ipcRenderer.send('loadHTMLInView', { html: serializableData });
-      } catch (error) {
-        console.error('Error sending data to IPC:', error);
-      }
-    } else {
-      console.error('Container not found!');
-    }
+  try {
+    console.log('Data to be sent:', htmlData);
+    const serializableData = JSON.stringify(htmlData); // Convert to string if necessary
+    ipcRenderer.send('loadHTMLInView', { html: serializableData });
+  } catch (error) {
+    console.error('Error sending data to IPC:', error);
   }
 }
-
 
 
 var urlParser = {

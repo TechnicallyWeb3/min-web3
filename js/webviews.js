@@ -9,6 +9,7 @@ var hasSeparateTitlebar = settings.get('useSeparateTitlebar')
 var windowIsMaximized = false // affects navbar height on Windows
 var windowIsFullscreen = false
 
+
 function captureCurrentTab (options) {
   if (tabs.get(tabs.getSelected()).private) {
     // don't capture placeholders for private tabs
@@ -496,12 +497,30 @@ ipc.on('async-call-result', function (e, args) {
   delete webviews.asyncCallbacks[args.callId]
 })
 
-ipc.on('loadHTMLInView', function (e, args) {
-  const tabId = args.id;
-  const htmlData = args.html;
+ipc.on('renderHTMLInView', function (e, htmlData) {
+  console.log("WORKING");
+  
+  // Assuming that the current tab is the one where the HTML needs to be rendered
+  const tabId = getCurrentTabId(); // You might have a function that returns the current tab ID
+  console.log(tabId);
+  console.log(webviews.hasViewForTab(tabId));
+  
 
-  webviews.callAsync(tabId, 'executeJavaScript', `document.documentElement.innerHTML = ${JSON.stringify(htmlData)}`);
+  if (tabId && webviews.hasViewForTab(tabId)) {
+    // Inject the HTML data into the webview's document
+    const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(htmlData)}`;
+    webviews.callAsync(tabId, 'loadURL', dataUrl);
+    
+  } else {
+    console.error('Tab ID not found or invalid');
+  }
 });
+
+function getCurrentTabId() {
+  const currentTabId = tabs.getSelected();
+  console.log('Retrieved Tab ID:', currentTabId);
+  return currentTabId; // Ensure this returns the correct tab ID
+}
 
 
 ipc.on('view-ipc', function (e, args) {
