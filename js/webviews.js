@@ -497,14 +497,11 @@ ipc.on('async-call-result', function (e, args) {
 })
 
 ipc.on('loadHTMLInView', function (e, args) {
-  const tabId = tabData.id;
-  const htmlData = JSON.parse(args.html); ;
-  console.log("Weorking");
-  
+  const tabId = args.id;
+  const htmlData = args.html;
 
   webviews.callAsync(tabId, 'executeJavaScript', `document.documentElement.innerHTML = ${JSON.stringify(htmlData)}`);
 });
-
 
 
 ipc.on('view-ipc', function (e, args) {
