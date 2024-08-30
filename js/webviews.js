@@ -509,7 +509,7 @@ ipc.on('renderHTMLInView', function (e, htmlData) {
   if (tabId && webviews.hasViewForTab(tabId)) {
     // Inject the HTML data into the webview's document
     const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(htmlData)}`;
-    webviews.callAsync(tabId, 'loadURL', dataUrl);
+    webviews.callAsync(tabId, 'executeJavaScript', `document.open(); document.write(${JSON.stringify(htmlData)}); document.close();`);
     
   } else {
     console.error('Tab ID not found or invalid');
