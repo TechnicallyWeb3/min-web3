@@ -177,7 +177,7 @@ function createView (existingViewId, id, webPreferences, boundsString, events) {
 
   function handleExternalProtocol (e, url, isInPlace, isMainFrame, frameProcessId, frameRoutingId) {
     var knownProtocols = ['http', 'https', 'web3', 'file', 'min', 'about', 'data', 'javascript', 'chrome'] // TODO anything else?
-    console.log(`viewManager:URL protocol = ${url.split(':')[0]}`)
+    console.log(`viewManager:handleExternalProtocol protocol = ${url.split(':')[0]}`)
 
     if (!knownProtocols.includes(url.split(':')[0])) {
       console.log(`viewManager:Unknown protocol found: ${url.split(':')[0]}`)
@@ -273,7 +273,7 @@ function destroyAllViews () {
 
 function setView (id, senderContents) {
   const win = windows.windowFromContents(senderContents).win
-  // console.log(`setView with contents:`)
+  console.log(`viewManager:setView`)
   // console.dir(senderContents, { depth: null })
 
   // setBrowserView causes flickering, so we only want to call it if the view is actually changing
@@ -296,6 +296,7 @@ function setView (id, senderContents) {
 
 function setBounds (id, bounds) {
   if (viewMap[id]) {
+    console.log(`viewManager:setBounds id = ${id}`)
     viewMap[id].setBounds(bounds)
   }
 }
@@ -303,7 +304,7 @@ function setBounds (id, bounds) {
 function focusView (id) {
   // empty views can't be focused because they won't propogate keyboard events correctly, see https://github.com/minbrowser/min/issues/616
   // also, make sure the view exists, since it might not if the app is shutting down
-  // console.log(`URL ${viewMap[id].webContents.getURL()} isLoading: ${viewMap[id].webContents.isLoading()}`)
+  console.log(`viewManager:focusView id = ${id}`)
   // console.dir(viewMap[id], { depth: null })
   viewMap[id] && (viewMap[id].webContents.getURL() !== '' || viewMap[id].webContents.isLoading())
   if (viewMap[id] && (viewMap[id].webContents.getURL() !== '' || viewMap[id].webContents.isLoading())) {
@@ -338,12 +339,13 @@ function getTabIDFromWebContents (contents) {
 }
 
 ipc.on('createView', function (e, args) {
-  // console.log(`createView with args:`)
-  // console.dir(args, { depth: null })
+  console.log(`viewManager:createView args = `)
+  console.dir(args, { depth: null })
   createView(args.existingViewId, args.id, args.webPreferences, args.boundsString, args.events)
 })
 
 ipc.on('destroyView', function (e, id) {
+  console.log(`viewManager:destroyView id = ${id}`)
   destroyView(id)
 })
 
@@ -376,6 +378,13 @@ ipc.on('hideCurrentView', function (e) {
   hideCurrentView(e.sender)
 })
 
+function downloadWebContractFiles(path) {
+  console.log(`viewManager:downloadWebContractFiles`)
+  // check path doesn't already end in .html
+  // if path has trailing / remove with basicURL in urlParser.js
+  return path + 'index.html'
+}
+
 function loadURLInView (id, url, win) {
   console.log(`viewManager:loadURLInView ${url} in ${id}`)
   // wait until the first URL is loaded to set the background color so that new tabs can use a custom background
@@ -392,11 +401,17 @@ function loadURLInView (id, url, win) {
       win.setBrowserView(viewMap[id])
     }
   }
-  viewMap[id].webContents.loadURL(url)
+  if (url.split(':')[0] === 'web3') {
+    console.log(`viewManager:loadWebContract (load and save html to cache/[url] folder)`)
+    url = downloadWebContractFiles((url.slice(7)).split('?')[0])
+  } else {
+    viewMap[id].webContents.loadURL(url)
+  }
   viewStateMap[id].loadedInitialURL = true
 }
 
 ipc.on('loadURLInView', function (e, args) {
+  
   const win = windows.windowFromContents(e.sender)?.win
   loadURLInView(args.id, args.url, win)
 })
