@@ -176,8 +176,11 @@ function createView (existingViewId, id, webPreferences, boundsString, events) {
   // show an "open in app" prompt for external protocols
 
   function handleExternalProtocol (e, url, isInPlace, isMainFrame, frameProcessId, frameRoutingId) {
-    var knownProtocols = ['http', 'https', 'file', 'min', 'about', 'data', 'javascript', 'chrome'] // TODO anything else?
+    var knownProtocols = ['http', 'https', 'web3', 'file', 'min', 'about', 'data', 'javascript', 'chrome'] // TODO anything else?
+    console.log(`viewManager:URL protocol = ${url.split(':')[0]}`)
+
     if (!knownProtocols.includes(url.split(':')[0])) {
+      console.log(`viewManager:Unknown protocol found: ${url.split(':')[0]}`)
       var externalApp = app.getApplicationNameForProtocol(url)
       if (externalApp) {
         var sanitizedName = externalApp.replace(/[^a-zA-Z0-9.]/g, '')
@@ -215,8 +218,10 @@ function createView (existingViewId, id, webPreferences, boundsString, events) {
   and an external one
   */
   view.webContents.on('did-start-navigation', function (event) {
+    console.log(`viewManager:did-start-navigation id = ${id}`)
     if (event.isMainFrame && !event.isSameDocument) {
       const hasJS = viewStateMap[id].hasJS
+      // console.log(`${id} hasJS: ${hasJS}`)
       const shouldHaveJS = (!(settings.get('filtering')?.contentTypes?.includes('script'))) || event.url.startsWith('min://')
       if (hasJS !== shouldHaveJS) {
         setTimeout(function () {
@@ -268,13 +273,21 @@ function destroyAllViews () {
 
 function setView (id, senderContents) {
   const win = windows.windowFromContents(senderContents).win
+  // console.log(`setView with contents:`)
+  // console.dir(senderContents, { depth: null })
 
   // setBrowserView causes flickering, so we only want to call it if the view is actually changing
   // see https://github.com/minbrowser/min/issues/1966
   if (win.getBrowserView() !== viewMap[id]) {
+    // console.log(`setView required for ${id}`)
+
     if (viewStateMap[id].loadedInitialURL) {
+      // console.log(`setBrowserView on ${id}`)
+      // console.dir(viewMap[id], { depth: null })
+
       win.setBrowserView(viewMap[id])
     } else {
+      // console.log(`${id} not ready to setBrowserView`)
       win.setBrowserView(null)
     }
     windows.getState(win).selectedView = id
@@ -290,6 +303,9 @@ function setBounds (id, bounds) {
 function focusView (id) {
   // empty views can't be focused because they won't propogate keyboard events correctly, see https://github.com/minbrowser/min/issues/616
   // also, make sure the view exists, since it might not if the app is shutting down
+  // console.log(`URL ${viewMap[id].webContents.getURL()} isLoading: ${viewMap[id].webContents.isLoading()}`)
+  // console.dir(viewMap[id], { depth: null })
+  viewMap[id] && (viewMap[id].webContents.getURL() !== '' || viewMap[id].webContents.isLoading())
   if (viewMap[id] && (viewMap[id].webContents.getURL() !== '' || viewMap[id].webContents.isLoading())) {
     viewMap[id].webContents.focus()
     return true
@@ -322,6 +338,8 @@ function getTabIDFromWebContents (contents) {
 }
 
 ipc.on('createView', function (e, args) {
+  // console.log(`createView with args:`)
+  // console.dir(args, { depth: null })
   createView(args.existingViewId, args.id, args.webPreferences, args.boundsString, args.events)
 })
 
@@ -334,6 +352,8 @@ ipc.on('destroyAllViews', function () {
 })
 
 ipc.on('setView', function (e, args) {
+  // console.log(`IPC:setView with args:`)
+  // console.dir(args, { depth: null })
   setView(args.id, e.sender)
   setBounds(args.id, args.bounds)
   if (args.focus && BrowserWindow.fromWebContents(e.sender) && BrowserWindow.fromWebContents(e.sender).isFocused()) {
@@ -357,10 +377,14 @@ ipc.on('hideCurrentView', function (e) {
 })
 
 function loadURLInView (id, url, win) {
+  console.log(`viewManager:loadURLInView ${url} in ${id}`)
   // wait until the first URL is loaded to set the background color so that new tabs can use a custom background
   if (!viewStateMap[id].loadedInitialURL) {
+    // console.log(`${url} initialLoad: ${false}`)
+
     // Give the site a chance to display something before setting the background, in case it has its own dark theme
     viewMap[id].webContents.once('dom-ready', function() {
+      console.log(`viewManager:did-finish-load URL = ${url}; id = ${id}`)
       viewMap[id].setBackgroundColor('#fff')
     })
     // If the view has no URL, it won't be attached yet
@@ -378,6 +402,8 @@ ipc.on('loadURLInView', function (e, args) {
 })
 
 ipc.on('callViewMethod', function (e, data) {
+  console.log(`viewManager:callViewMethod data = `)
+  console.dir(data, { depth: null })
   var error, result
   try {
     var webContents = viewMap[data.id].webContents

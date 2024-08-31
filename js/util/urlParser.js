@@ -5,17 +5,6 @@ const searchEngine = require('util/searchEngine.js')
 const hosts = require('./hosts.js')
 const httpsTopSites = require('../../ext/httpsUpgrade/httpsTopSites.json')
 const publicSuffixes = require('../../ext/publicSuffixes/public_suffix_list.json')
-const { error } = require('console')
-
-const { Web3 } = require('web3')
-
-const chain = {
-  chainName: 'Polygon',
-  chainSymbol: 'MATIC',
-  chainId: 137,
-  rpc: 'https://polygon-bor-rpc.publicnode.com',
-  explorerPrefix: 'https://polygonscan.com/address/'
-}
 
 const showExplorer = false;
 

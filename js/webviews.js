@@ -29,9 +29,11 @@ function captureCurrentTab (options) {
 
 // called whenever a new page starts loading, or an in-page navigation occurs
 function onPageURLChange (tab, url) {
+  console.log(`webview: onPageURLChange url = ${url}`)
+
   if (
     url.indexOf('https://') === 0 || 
-    // url.indexOf('web3://') === 0 || 
+    url.indexOf('web3://') === 0 || 
     url.indexOf('about:') === 0 || 
     url.indexOf('chrome:') === 0 || 
     url.indexOf('file://') === 0 || 
@@ -47,7 +49,7 @@ function onPageURLChange (tab, url) {
       url: url
     })
   }
-
+  console.log(`webview: onPageURLChange protocol = ${url.split(':')[0]}`)
   webviews.callAsync(tab, 'setVisualZoomLevelLimits', [1, 3])
 }
 

@@ -103,6 +103,8 @@ function sendIPCToWindow (window, action, data) {
     setTimeout(function() {
       if (window.webContents.isLoadingMainFrame()) {
         window.webContents.once('did-finish-load', function () {
+          console.log(`main:did-finish-load isLoadingMainFrame ${action}`)
+          console.dir(data || {})
           window.webContents.send(action, data || {})
         })
       } else {
@@ -114,7 +116,8 @@ function sendIPCToWindow (window, action, data) {
   } else {
     var window = createWindow()
     window.webContents.once('did-finish-load', function () {
-      window.webContents.send(action, data || {})
+    console.log(`main:did-finish-load createWindow`)
+    window.webContents.send(action, data || {})
     })
   }
 }
@@ -132,6 +135,7 @@ function handleCommandLineArguments (argv) {
       if (arg && arg.toLowerCase() !== __dirname.toLowerCase()) {
         // URL
         if (arg.indexOf('://') !== -1) {
+          console.log(`main:handleCommandLineArguments arg = ${arg}`)
           sendIPCToWindow(windows.getCurrent(), 'addTab', {
             url: arg
           })
@@ -152,6 +156,7 @@ function handleCommandLineArguments (argv) {
 }
 
 function createWindow () {
+  console.log(`main:createWindow`)
   var bounds;
 
   try {
@@ -229,6 +234,7 @@ function createWindowWithBounds (bounds) {
     newWin.maximize()
 
     newWin.webContents.once('did-finish-load', function () {
+      console.log(`main:did-finish-load createWindowWithBounds`)
       sendIPCToWindow(newWin, 'maximize')
     })
   }
@@ -339,6 +345,8 @@ app.on('ready', function () {
   const newWin = createWindow()
 
   newWin.webContents.on('did-finish-load', function () {
+    console.log(`main:did-finish-load newWin`)
+
     // if a URL was passed as a command line argument (probably because Min is set as the default browser on Linux), open it.
     handleCommandLineArguments(process.argv)
 
@@ -358,11 +366,14 @@ app.on('ready', function () {
 })
 
 app.on('open-url', function (e, url) {
+  console.log(`main:open-url ${url}`)
   if (appIsReady) {
+    // console.log(`appIsReady to load ${url}`)
     sendIPCToWindow(windows.getCurrent(), 'addTab', {
       url: url
     })
   } else {
+    // console.log(`appIsNotReady to load ${url}`)
     global.URLToOpen = url // this will be handled later in the createWindow callback
   }
 })
@@ -430,7 +441,8 @@ ipc.on('quit', function () {
 })
 
 ipc.on('tab-state-change', function(e, events) {
-  windows.getAll().forEach(function(window) {
+    // console.log(`main:tab-state-change id = ${e.frameId}`)
+    windows.getAll().forEach(function(window) {
     if (window.webContents.id !== e.sender.id) {
       window.webContents.send('tab-state-change-receive', {
         sourceWindowId: windows.windowFromContents(e.sender).id,
@@ -457,7 +469,8 @@ const placesPage = 'file://' + __dirname + '/js/places/placesService.html'
 
 let placesWindow = null
 app.once('ready', function() {
-  placesWindow = new BrowserWindow({
+    console.log(`main:ready`)
+    placesWindow = new BrowserWindow({
     width: 300,
     height: 300,
     show: false,
@@ -466,7 +479,7 @@ app.once('ready', function() {
       contextIsolation: false
     }
   })
-
+  
   placesWindow.loadURL(placesPage)
 })
 
