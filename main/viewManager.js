@@ -382,7 +382,7 @@ function downloadWebContractFiles(path) {
   console.log(`viewManager:downloadWebContractFiles`)
   // check path doesn't already end in .html
   // if path has trailing / remove with basicURL in urlParser.js
-  return path + 'index.html'
+  return path
 }
 
 function loadURLInView (id, url, win) {
