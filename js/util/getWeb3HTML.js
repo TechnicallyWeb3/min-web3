@@ -4,7 +4,7 @@ const {Web3} = require('web3');
 const RPC_URL = 'https://polygon-bor-rpc.publicnode.com/'; // Should use network.rpc attribute in settings
 const web3 = new Web3(RPC_URL);
 
-// 0x53681D337b9ACd156ce335eA96aF05298FE700aF active HTML contract
+// 0x53681D337b9ACd156ce335eA96aF05298FE700aF:8524 active HTML contract
 
 const contractABI = [
     {
