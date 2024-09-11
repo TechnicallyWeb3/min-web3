@@ -512,10 +512,14 @@ ipcRenderer.on('renderHTMLInView', function (e, htmlData) {
     const newURL = `web3://${htmlData.ca}`;
     tabs.update(tabId, { url: newURL });
     console.log(htmlData + "HtmlDATA")
-    webviews.callAsync(tabId, 'executeJavaScript', `document.open(); document.write(${JSON.stringify(htmlData.htmlData)}); document.close();`, () => {
+    webviews.callAsync(tabId, 'executeJavaScript', `document.open(); document.write(${JSON.stringify(htmlData.htmlData )}); document.close();`, () => {
       console.log("HTML loaded, sending event to main process");
       ipcRenderer.send('htmlLoaded', tabId);
     });
+    //   webviews.callAsync(tabId, 'loadURL', `data:text/html;charset=utf-8,${encodeURIComponent(htmlData.htmlData )}`, () => {
+    //   console.log("HTML loaded, sending event to main process");
+    //   ipcRenderer.send('htmlLoaded', tabId);
+    // });
   } else {
     console.error('Tab ID not found or invalid');
   }
