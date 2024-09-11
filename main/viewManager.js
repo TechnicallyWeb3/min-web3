@@ -1,4 +1,40 @@
 const BrowserView = electron.BrowserView
+const { Web3 } = require('web3'); // Correct import statement
+
+// Chain configuration
+const chain = {
+  chainName: 'Polygon',
+  chainSymbol: 'MATIC',
+  chainId: 137,
+  rpc: 'https://polygon-bor-rpc.publicnode.com',
+  explorerPrefix: 'https://polygonscan.com/address/'
+};
+
+// Initialize Web3
+const web3 = new Web3(chain.rpc);
+
+async function fetchContractHTML(address) {
+  const contract = new web3.eth.Contract([
+    {
+      constant: true,
+      inputs: [],
+      name: "getHTML",
+      outputs: [{ name: "", type: "string" }],
+      payable: false,
+      stateMutability: "view",
+      type: "function",
+    }
+  ], address);
+
+  try {
+    const htmlData = await contract.methods.getHTML().call();
+    return htmlData;
+  } catch (error) {
+    console.error('Error fetching HTML:', error);
+    return null;
+  }
+}
+
 
 var viewMap = {} // id: view
 var viewStateMap = {} // id: view state
@@ -357,19 +393,32 @@ ipc.on('hideCurrentView', function (e) {
 })
 
 function loadURLInView (id, url, win) {
-  // wait until the first URL is loaded to set the background color so that new tabs can use a custom background
   if (!viewStateMap[id].loadedInitialURL) {
-    // Give the site a chance to display something before setting the background, in case it has its own dark theme
     viewMap[id].webContents.once('dom-ready', function() {
       viewMap[id].setBackgroundColor('#fff')
     })
-    // If the view has no URL, it won't be attached yet
     if (win && id === windows.getState(win).selectedView) {
       win.setBrowserView(viewMap[id])
     }
   }
-  viewMap[id].webContents.loadURL(url)
-  viewStateMap[id].loadedInitialURL = true
+  if (url.startsWith('web3://')) {
+    const contractAddress = url.replace('web3://', '');
+    fetchContractHTML(contractAddress)
+      .then(htmlData => {
+        if (htmlData) {
+          viewMap[id].webContents.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(htmlData)}`);
+        } else {
+          viewMap[id].webContents.loadURL(chain.explorerPrefix + contractAddress);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching contract HTML:', error);
+        viewMap[id].webContents.loadURL(chain.explorerPrefix + contractAddress);
+      });
+  } else {
+    viewMap[id].webContents.loadURL(url);
+  }
+  viewStateMap[id].loadedInitialURL = true;
 }
 
 

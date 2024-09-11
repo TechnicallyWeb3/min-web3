@@ -89,21 +89,7 @@ var urlParser = {
 
     const contractAddress = urlParser.removeProtocol(url);
     if (urlParser.validWeb3Regex.test(contractAddress)) {
-      return fetchContractHTML(contractAddress)
-        .then(htmlData => {
-          if (htmlData) {
-            console.log("HTML Data:", htmlData);
-            renderHTML(contractAddress, htmlData);
-            return `data:text/html;charset=utf-8,${encodeURIComponent(htmlData)}`;
-          } else {
-            console.log("Contract does not have getHTML method or no data available.");
-            return chain.explorerPrefix + contractAddress;
-          }
-        })
-        .catch(error => {
-          console.error("Error checking contract:", error);
-          return chain.explorerPrefix + contractAddress;
-        });
+      return `web3://${contractAddress}`;
     }
 
     if (urlParser.isURL(url)) {

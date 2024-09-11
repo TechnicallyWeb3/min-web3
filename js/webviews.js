@@ -416,7 +416,24 @@ ipc.on('leave-full-screen', function () {
 webviews.bindEvent('did-start-navigation', onNavigate)
 webviews.bindEvent('will-redirect', onNavigate)
 webviews.bindEvent('did-navigate', function (tabId, url, httpResponseCode, httpStatusText) {
-  onPageURLChange(tabId, url)
+  if (url.startsWith('web3://')) {
+    const contractAddress = url.replace('web3://', '');
+    fetchContractHTML(contractAddress)
+      .then(htmlData => {
+        if (htmlData) {
+          onPageURLChange(tabId, url);
+          webviews.callAsync(tabId, 'executeJavaScript', `document.open(); document.write(${JSON.stringify(htmlData)}); document.close();`);
+        } else {
+          onPageURLChange(tabId, chain.explorerPrefix + contractAddress);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching contract HTML:', error);
+        onPageURLChange(tabId, chain.explorerPrefix + contractAddress);
+      });
+  } else {
+    onPageURLChange(tabId, url);
+  }
 })
 
 webviews.bindEvent('did-finish-load', onPageLoad)
@@ -497,33 +514,33 @@ ipc.on('async-call-result', function (e, args) {
   delete webviews.asyncCallbacks[args.callId]
 })
 
-const { ipcRenderer } = require('electron');
+// const { ipcRenderer } = require('electron');
 
-ipcRenderer.on('renderHTMLInView', function (e, htmlData) {
-  console.log("WORKING");
-  console.log(htmlData.ca);
+// ipcRenderer.on('renderHTMLInView', function (e, htmlData) {
+//   console.log("WORKING");
+//   console.log(htmlData.ca);
   
-  const tabId = getCurrentTabId();
-  console.log(tabId);
-  console.log(webviews.hasViewForTab(tabId));
+//   const tabId = getCurrentTabId();
+//   console.log(tabId);
+//   console.log(webviews.hasViewForTab(tabId));
 
-  if (tabId && webviews.hasViewForTab(tabId)) {
-    // const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(htmlData)}`;
-    const newURL = `web3://${htmlData.ca}`;
-    tabs.update(tabId, { url: newURL });
-    console.log(htmlData + "HtmlDATA")
-    webviews.callAsync(tabId, 'executeJavaScript', `document.open(); document.write(${JSON.stringify(htmlData.htmlData )}); document.close();`, () => {
-      console.log("HTML loaded, sending event to main process");
-      ipcRenderer.send('htmlLoaded', tabId);
-    });
-    //   webviews.callAsync(tabId, 'loadURL', `data:text/html;charset=utf-8,${encodeURIComponent(htmlData.htmlData )}`, () => {
-    //   console.log("HTML loaded, sending event to main process");
-    //   ipcRenderer.send('htmlLoaded', tabId);
-    // });
-  } else {
-    console.error('Tab ID not found or invalid');
-  }
-});
+//   if (tabId && webviews.hasViewForTab(tabId)) {
+//     // const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(htmlData)}`;
+//     const newURL = `web3://${htmlData.ca}`;
+//     tabs.update(tabId, { url: newURL });
+//     console.log(htmlData + "HtmlDATA")
+//     webviews.callAsync(tabId, 'executeJavaScript', `document.open(); document.write(${JSON.stringify(htmlData.htmlData )}); document.close();`, () => {
+//       console.log("HTML loaded, sending event to main process");
+//       ipcRenderer.send('htmlLoaded', tabId);
+//     });
+//     //   webviews.callAsync(tabId, 'loadURL', `data:text/html;charset=utf-8,${encodeURIComponent(htmlData.htmlData )}`, () => {
+//     //   console.log("HTML loaded, sending event to main process");
+//     //   ipcRenderer.send('htmlLoaded', tabId);
+//     // });
+//   } else {
+//     console.error('Tab ID not found or invalid');
+//   }
+// });
 
 function getCurrentTabId() {
   const currentTabId = tabs.getSelected();
