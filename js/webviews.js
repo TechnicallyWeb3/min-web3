@@ -501,14 +501,18 @@ const { ipcRenderer } = require('electron');
 
 ipcRenderer.on('renderHTMLInView', function (e, htmlData) {
   console.log("WORKING");
+  console.log(htmlData.ca);
   
   const tabId = getCurrentTabId();
   console.log(tabId);
   console.log(webviews.hasViewForTab(tabId));
 
   if (tabId && webviews.hasViewForTab(tabId)) {
-    const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(htmlData)}`;
-    webviews.callAsync(tabId, 'executeJavaScript', `document.open(); document.write(${JSON.stringify(htmlData)}); document.close();`, () => {
+    // const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(htmlData)}`;
+    const newURL = `web3://${htmlData.ca}`;
+    tabs.update(tabId, { url: newURL });
+    console.log(htmlData + "HtmlDATA")
+    webviews.callAsync(tabId, 'executeJavaScript', `document.open(); document.write(${JSON.stringify(htmlData.htmlData)}); document.close();`, () => {
       console.log("HTML loaded, sending event to main process");
       ipcRenderer.send('htmlLoaded', tabId);
     });

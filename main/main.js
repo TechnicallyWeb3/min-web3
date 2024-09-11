@@ -23,12 +23,12 @@ crashReporter.start({
   compress: true
 })
 
-ipc.on('loadHTMLInView', (event, { html }) => {
-  console.log('HTML data received in main process:', html);
+ipc.on('loadHTMLInView', (event, {ca,htmlData}) => {
+  console.log('HTML data received in main process:', htmlData);
   try {
-    console.log(html);
+    // console.log(html);
     // Perform actions with htmlData, like sending it back to a specific webview
-    event.sender.send('renderHTMLInView', html);
+    event.sender.send('renderHTMLInView', {ca,htmlData});
   } catch (error) {
     console.error('Error parsing HTML data:', error);
   }

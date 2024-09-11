@@ -26,11 +26,10 @@ function removeTrailingSlash(url) {
   return (url.endsWith('/') ? url.slice(0, -1) : url);
 }
 
-function renderHTML(htmlData) {
+function renderHTML(ca, htmlData) {
   try {
-    console.log('Data to be sent:', htmlData);
-    const serializableData = JSON.stringify(htmlData); // Convert to string if necessary
-    ipcRenderer.send('loadHTMLInView', { html: serializableData });
+    console.log('Data to be sent:', ca, htmlData); // Convert to string if necessary
+    ipcRenderer.send('loadHTMLInView', {ca,htmlData});
   } catch (error) {
     console.error('Error sending data to IPC:', error);
   }
@@ -94,7 +93,7 @@ var urlParser = {
         .then(htmlData => {
           if (htmlData) {
             console.log("HTML Data:", htmlData);
-            renderHTML(htmlData);
+            renderHTML(contractAddress, htmlData);
             return `data:text/html;charset=utf-8,${encodeURIComponent(htmlData)}`;
           } else {
             console.log("Contract does not have getHTML method or no data available.");
