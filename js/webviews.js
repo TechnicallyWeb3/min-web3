@@ -497,20 +497,21 @@ ipc.on('async-call-result', function (e, args) {
   delete webviews.asyncCallbacks[args.callId]
 })
 
-ipc.on('renderHTMLInView', function (e, htmlData) {
+const { ipcRenderer } = require('electron');
+
+ipcRenderer.on('renderHTMLInView', function (e, htmlData) {
   console.log("WORKING");
   
-  // Assuming that the current tab is the one where the HTML needs to be rendered
-  const tabId = getCurrentTabId(); // You might have a function that returns the current tab ID
+  const tabId = getCurrentTabId();
   console.log(tabId);
   console.log(webviews.hasViewForTab(tabId));
-  
 
   if (tabId && webviews.hasViewForTab(tabId)) {
-    // Inject the HTML data into the webview's document
     const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(htmlData)}`;
-    webviews.callAsync(tabId, 'executeJavaScript', `document.open(); document.write(${JSON.stringify(htmlData)}); document.close();`);
-    
+    webviews.callAsync(tabId, 'executeJavaScript', `document.open(); document.write(${JSON.stringify(htmlData)}); document.close();`, () => {
+      console.log("HTML loaded, sending event to main process");
+      ipcRenderer.send('htmlLoaded', tabId);
+    });
   } else {
     console.error('Tab ID not found or invalid');
   }
@@ -519,9 +520,8 @@ ipc.on('renderHTMLInView', function (e, htmlData) {
 function getCurrentTabId() {
   const currentTabId = tabs.getSelected();
   console.log('Retrieved Tab ID:', currentTabId);
-  return currentTabId; // Ensure this returns the correct tab ID
+  return currentTabId;
 }
-
 
 ipc.on('view-ipc', function (e, args) {
   if (!webviews.hasViewForTab(args.id)) {

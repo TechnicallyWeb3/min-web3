@@ -34,6 +34,27 @@ ipc.on('loadHTMLInView', (event, { html }) => {
   }
 });
 
+ipc.on('htmlLoaded', (event, tabId) => {
+  console.log("HTML LOADED IN MAIN", tabId);
+  const win = BrowserWindow.getAllWindows()[0]; // Assuming you're using a single window
+  if (win) {
+    console.log("Sending focusWebview event to window", win.id);
+    event.sender.send('focusWebview', tabId);
+    win.webContents.send('focusWebview', tabId);
+  } else {
+    console.error("No window found");
+  }
+});
+
+// Add this near the other IPC handlers
+ipc.on('testIPCConnection', (event) => {
+  const win = BrowserWindow.getAllWindows()[0];
+  if (win) {
+    console.log("Sending test event to window", win.id);
+    win.webContents.send('testIPCResponse');
+  }
+});
+
 if (process.argv.some(arg => arg === '-v' || arg === '--version')) {
   console.log('Min: ' + app.getVersion())
   console.log('Chromium: ' + process.versions.chrome)
