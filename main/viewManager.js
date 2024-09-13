@@ -212,7 +212,7 @@ function createView (existingViewId, id, webPreferences, boundsString, events) {
   // show an "open in app" prompt for external protocols
 
   function handleExternalProtocol (e, url, isInPlace, isMainFrame, frameProcessId, frameRoutingId) {
-    var knownProtocols = ['http', 'https', 'file', 'min', 'about', 'data', 'javascript', 'chrome'] // TODO anything else?
+    var knownProtocols = ['http', 'https', 'file', 'min', 'about', 'data', 'javascript', 'chrome','web'] // TODO anything else?
     if (!knownProtocols.includes(url.split(':')[0])) {
       var externalApp = app.getApplicationNameForProtocol(url)
       if (externalApp) {
@@ -393,6 +393,7 @@ ipc.on('hideCurrentView', function (e) {
 })
 
 function loadURLInView (id, url, win) {
+  console.log('Debug: Loading URL in view:', url);
   if (!viewStateMap[id].loadedInitialURL) {
     viewMap[id].webContents.once('dom-ready', function() {
       viewMap[id].setBackgroundColor('#fff')
@@ -401,24 +402,14 @@ function loadURLInView (id, url, win) {
       win.setBrowserView(viewMap[id])
     }
   }
-  if (url.startsWith('web3://')) {
-    const contractAddress = url.replace('web3://', '');
-    fetchContractHTML(contractAddress)
-      .then(htmlData => {
-        if (htmlData) {
-          viewMap[id].webContents.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(htmlData)}`);
-        } else {
-          viewMap[id].webContents.loadURL(chain.explorerPrefix + contractAddress);
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching contract HTML:', error);
-        viewMap[id].webContents.loadURL(chain.explorerPrefix + contractAddress);
-      });
-  } else {
-    viewMap[id].webContents.loadURL(url);
-  }
-  viewStateMap[id].loadedInitialURL = true;
+  
+  // Load the URL directly, including web3:// URLs
+  viewMap[id].webContents.loadURL(url).catch(error => {
+    console.error('Error loading URL:', error);
+    viewMap[id].webContents.loadURL(webviews.internalPages.error + '?ec=' + error.errorCode + '&url=' + encodeURIComponent(url));
+  });
+  
+  viewStateMap[id].loadedInitialURL = true
 }
 
 

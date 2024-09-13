@@ -369,6 +369,7 @@ app.on('ready', function () {
 
   registerBundleProtocol(session.defaultSession)
 
+
   const newWin = createWindow()
 
   newWin.webContents.on('did-finish-load', function () {
@@ -388,6 +389,7 @@ app.on('ready', function () {
   mainMenu = buildAppMenu()
   Menu.setApplicationMenu(mainMenu)
   createDockMenu()
+
 })
 
 app.on('open-url', function (e, url) {

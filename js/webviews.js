@@ -30,7 +30,7 @@ function captureCurrentTab (options) {
 
 // called whenever a new page starts loading, or an in-page navigation occurs
 function onPageURLChange (tab, url) {
-  if (url.indexOf('https://') === 0 || url.indexOf('about:') === 0 || url.indexOf('chrome:') === 0 || url.indexOf('file://') === 0 || url.indexOf('min://') === 0) {
+  if (url.indexOf('https://') === 0 || url.indexOf('about:') === 0 || url.indexOf('chrome:') === 0 || url.indexOf('file://') === 0 || url.indexOf('min://') === 0 || url.indexOf('web3://') === 0) {
     tabs.update(tab, {
       secure: true,
       url: url
@@ -483,6 +483,13 @@ settings.listen(function () {
   tasks.forEach(function (task) {
     task.tabs.forEach(function (tab) {
       if (tab.url.startsWith('min://')) {
+        try {
+          webviews.callAsync(tab.id, 'send', ['receiveSettingsData', settings.list])
+        } catch (e) {
+          // webview might not actually exist
+        }
+      }
+      if (tab.url.startsWith('web3://')) {
         try {
           webviews.callAsync(tab.id, 'send', ['receiveSettingsData', settings.list])
         } catch (e) {

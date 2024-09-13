@@ -89,7 +89,11 @@ var urlParser = {
 
     const contractAddress = urlParser.removeProtocol(url);
     if (urlParser.validWeb3Regex.test(contractAddress)) {
-      return `web3://${contractAddress}`;
+      return `web://${contractAddress}`;
+    }
+
+    if (url.startsWith('web3://')) {
+      return 'web://' + url.slice(7)
     }
 
     if (urlParser.isURL(url)) {
