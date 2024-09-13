@@ -18,7 +18,7 @@ function removeTrailingSlash (url) {
 var urlParser = {
   validIP4Regex: /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/i,
   validDomainRegex: /^(?!-)(?:.*@)*?([a-z0-9-._]+[a-z0-9]|\[[:a-f0-9]+\])/i,
-  validWeb3Regex: /^0x[a-fA-F0-9]{40}$/,
+  validWeb3Regex: /^(0x[a-fA-F0-9]{40}|[^:\s]+:[^/\s]*|\S+\/\*|\S+\?\S*)$/,
   unicodeRegex: /[^\u0000-\u00ff]/,
   removeProtocolRegex: /^(https?|file|web3):\/\//i,
   protocolRegex: /^[a-z0-9]+:\/\//, // URI schemes can be alphanum

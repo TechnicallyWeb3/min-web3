@@ -61,5 +61,3 @@ async function getOwner(contractAddress) {
     }
 }
 
-getHTML('0x53681D337b9ACd156ce335eA96aF05298FE700aF')
-
