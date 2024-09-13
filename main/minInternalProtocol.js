@@ -56,31 +56,29 @@ function registerBundleProtocol (ses) {
 
   ses.protocol.handle('web', async (req) => {
     console.log('Debug: Received web3 request:', req.url)
-    const contractAddress = new URL(req.url).hostname
-  
-    // if (!urlParser.validWeb3Regex.test(contractAddress)) {
-    //   return new Response('Invalid contract address', {
-    //     status: 400,
-    //     headers: { 'content-type': 'text/plain' }
-    //   })
-    // }
-  
+    const url = new URL(req.url)
+    const contractAddress = url.hostname
+    const path = url.pathname || '/'
+    console.log('Debug: Contract address:', contractAddress)
+    console.log('Debug: Path:', path)
     try {
-      const htmlData = await fetchContractHTML(contractAddress)
-      if (htmlData) {
-        return new Response(htmlData, {
+      const resource = await fetchContractResource(contractAddress, path)
+      console.log('Debug: Resource:', resource.content)
+      console.log('Debug: Resource:', resource.contentType)
+      if (resource) {
+        return new Response(resource.content, {
           status: 200,
-          headers: { 'content-type': 'text/html' }
+          headers: { 'content-type': resource.contentType }
         })
       } else {
-        return new Response('No HTML data found for this contract', {
+        return new Response('Resource not found', {
           status: 404,
           headers: { 'content-type': 'text/plain' }
         })
       }
     } catch (error) {
-      console.error('Error fetching contract HTML:', error)
-      return new Response('Error fetching contract HTML', {
+      console.error('Error fetching resource:', error)
+      return new Response('Error fetching resource', {
         status: 500,
         headers: { 'content-type': 'text/plain' }
       })

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Hello World Page</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            font-size: 2em;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 id='message'></h1>
+    <script>
+        const messageElement = document.getElementById('message');
+        const helloMessage = 'HELLO'; const worldMessage = 'WORLD!!';
+        let index = 0; const typingSpeed = 200;
+        const delayBeforeWorld = 1000;
+        const flashDuration = 500;
+        function typeHello() {
+            if (index < helloMessage.length) {
+                messageElement.textContent += helloMessage.charAt(index);
+                index++;
+                setTimeout(typeHello, typingSpeed);
+            } else {
+                setTimeout(flashWorld, delayBeforeWorld);
+            }
+        }
+        function flashWorld() {
+            messageElement.textContent = worldMessage;
+            setTimeout(() => { messageElement.textContent = helloMessage + ' ' + worldMessage; }, flashDuration);
+        }
+        typeHello();
+    </script>
+</body>
+
+</html>

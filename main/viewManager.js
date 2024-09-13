@@ -13,24 +13,24 @@ const chain = {
 // Initialize Web3
 const web3 = new Web3(chain.rpc);
 
-async function fetchContractHTML(address) {
+async function fetchContractResource(address, path) {
   const contract = new web3.eth.Contract([
     {
       constant: true,
-      inputs: [],
-      name: "getHTML",
-      outputs: [{ name: "", type: "string" }],
-      payable: false,
-      stateMutability: "view",
+      inputs: [{ name: "path", type: "string" }],
+      name: "getResource",
+      outputs: [{ name: "content", type: "string" }, { name: "contentType", type: "string" }],
       type: "function",
     }
   ], address);
 
   try {
-    const htmlData = await contract.methods.getHTML().call();
-    return htmlData;
+    console.log('Debug: Fetching resource:', path.toString())
+    const result = await contract.methods.getResource(path).call();
+    console.log('Debug: Resource:', { result })
+    return { content: result.content, contentType: result.contentType };
   } catch (error) {
-    console.error('Error fetching HTML:', error);
+    console.error('Error fetching resource:', error);
     return null;
   }
 }
