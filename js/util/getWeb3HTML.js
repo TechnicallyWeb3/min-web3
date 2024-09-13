@@ -5,6 +5,7 @@ const RPC_URL = 'https://polygon-bor-rpc.publicnode.com/'; // Should use network
 const web3 = new Web3(RPC_URL);
 
 // 0x53681D337b9ACd156ce335eA96aF05298FE700aF active HTML contract
+// 0xc67038e32E6645f93957a28e34c4B8BEA903e042 active HTML contract with JS
 
 const contractABI = [
     {
@@ -60,6 +61,4 @@ async function getOwner(contractAddress) {
         console.error('Error calling smart contract:', error);
     }
 }
-
-getHTML('0x53681D337b9ACd156ce335eA96aF05298FE700aF')
 
