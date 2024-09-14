@@ -1,0 +1,12 @@
+#browser-logo {
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  
+  #navbar-logo {
+    height: 24px; /* Adjust this value to match your desired logo size */
+    width: auto;
+    object-fit: contain;
+  }
