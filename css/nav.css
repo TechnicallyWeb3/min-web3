@@ -10,3 +10,10 @@
     width: auto;
     object-fit: contain;
   }
+
+  #navbar {
+    border-radius: 10 10 0px 0px; /* Adjust the values as needed */
+    /* Optional: Add border to see the rounded corners */
+    background-color: black;
+  }
+  
