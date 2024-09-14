@@ -13,27 +13,55 @@ const chain = {
 // Initialize Web3
 const web3 = new Web3(chain.rpc);
 
+
 async function fetchContractResource(address, path) {
   const contract = new web3.eth.Contract([
-    {
-      constant: true,
-      inputs: [{ name: "path", type: "string" }],
-      name: "getResource",
-      outputs: [{ name: "content", type: "string" }, { name: "contentType", type: "string" }],
-      type: "function",
-    }
+      {
+          constant: true,
+          inputs: [{ name: "path", type: "string" }],
+          name: "getTotalChunks",
+          outputs: [{ name: "", type: "uint256" }],
+          type: "function",
+      },
+      {
+          constant: true,
+          inputs: [{ name: "path", type: "string" }, { name: "index", type: "uint256" }],
+          name: "getResourceChunk",
+          outputs: [{ name: "content", type: "string" }, { name: "contentType", type: "string" }],
+          type: "function",
+      }
   ], address);
 
   try {
-    console.log('Debug: Fetching resource:', path.toString())
-    const result = await contract.methods.getResource(path).call();
-    console.log('Debug: Resource:', { result })
-    return { content: result.content, contentType: result.contentType };
+      console.log(`Fetching total chunks for path: ${path}`);
+      const totalChunks = await contract.methods.getTotalChunks(path.toString()).call();
+      console.log(`Total chunks to fetch: ${totalChunks }`);
+
+
+
+      let content = "";
+      let contentType = "";
+
+      for (let i = 0; i < totalChunks; i++) {
+          console.log(`Fetching chunk ${i + 1} of ${totalChunks} for path: ${path}`);
+          const result = await contract.methods.getResourceChunk(path, i).call();
+          
+          content += result[0]; // Append the chunk
+          contentType = result[1]; // Keep content type consistent
+          
+          console.log(`Fetched chunk ${i + 1}:`, result[0]);
+      }
+
+      console.log(`Completed fetching resource for path: ${path}`);
+      console.log(`Content type: ${contentType}`);
+      return { content, contentType };
   } catch (error) {
-    console.error('Error fetching resource:', error);
-    return null;
+      console.error('Error fetching resource chunks:', error);
+      return null;
   }
 }
+
+
 
 
 var viewMap = {} // id: view
