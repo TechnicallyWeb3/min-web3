@@ -23,6 +23,38 @@ crashReporter.start({
   compress: true
 })
 
+ipc.on('loadHTMLInView', (event, {ca,htmlData}) => {
+  console.log('HTML data received in main process:', htmlData);
+  try {
+    // console.log(html);
+    // Perform actions with htmlData, like sending it back to a specific webview
+    event.sender.send('renderHTMLInView', {ca,htmlData});
+  } catch (error) {
+    console.error('Error parsing HTML data:', error);
+  }
+});
+
+ipc.on('htmlLoaded', (event, tabId) => {
+  console.log("HTML LOADED IN MAIN", tabId);
+  const win = BrowserWindow.getAllWindows()[0]; // Assuming you're using a single window
+  if (win) {
+    console.log("Sending focusWebview event to window", win.id);
+    event.sender.send('focusWebview', tabId);
+    win.webContents.send('focusWebview', tabId);
+  } else {
+    console.error("No window found");
+  }
+});
+
+// Add this near the other IPC handlers
+ipc.on('testIPCConnection', (event) => {
+  const win = BrowserWindow.getAllWindows()[0];
+  if (win) {
+    console.log("Sending test event to window", win.id);
+    win.webContents.send('testIPCResponse');
+  }
+});
+
 if (process.argv.some(arg => arg === '-v' || arg === '--version')) {
   console.log('Min: ' + app.getVersion())
   console.log('Chromium: ' + process.versions.chrome)
@@ -208,6 +240,7 @@ function createWindowWithBounds (bounds) {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
+      webSecurity: false, // Disables the security restriction
       nodeIntegrationInWorker: true, // used by ProcessSpawner
       additionalArguments: [
         '--user-data-path=' + userDataPath,
@@ -342,6 +375,7 @@ app.on('ready', function () {
 
   registerBundleProtocol(session.defaultSession)
 
+
   const newWin = createWindow()
 
   newWin.webContents.on('did-finish-load', function () {
@@ -363,6 +397,7 @@ app.on('ready', function () {
   mainMenu = buildAppMenu()
   Menu.setApplicationMenu(mainMenu)
   createDockMenu()
+
 })
 
 app.on('open-url', function (e, url) {

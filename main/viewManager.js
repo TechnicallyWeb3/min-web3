@@ -1,4 +1,68 @@
 const BrowserView = electron.BrowserView
+const { Web3 } = require('web3'); // Correct import statement
+
+// Chain configuration
+const chain = {
+  chainName: 'Polygon',
+  chainSymbol: 'MATIC',
+  chainId: 137,
+  rpc: 'https://polygon-bor-rpc.publicnode.com',
+  explorerPrefix: 'https://polygonscan.com/address/'
+};
+
+// Initialize Web3
+const web3 = new Web3(chain.rpc);
+
+
+async function fetchContractResource(address, path) {
+  const contract = new web3.eth.Contract([
+      {
+          constant: true,
+          inputs: [{ name: "path", type: "string" }],
+          name: "getTotalChunks",
+          outputs: [{ name: "", type: "uint256" }],
+          type: "function",
+      },
+      {
+          constant: true,
+          inputs: [{ name: "path", type: "string" }, { name: "index", type: "uint256" }],
+          name: "getResourceChunk",
+          outputs: [{ name: "content", type: "string" }, { name: "contentType", type: "string" }],
+          type: "function",
+      }
+  ], address);
+
+  try {
+      console.log(`Fetching total chunks for path: ${path}`);
+      const totalChunks = await contract.methods.getTotalChunks(path.toString()).call();
+      console.log(`Total chunks to fetch: ${totalChunks }`);
+
+
+
+      let content = "";
+      let contentType = "";
+
+      for (let i = 0; i < totalChunks; i++) {
+          console.log(`Fetching chunk ${i + 1} of ${totalChunks} for path: ${path}`);
+          const result = await contract.methods.getResourceChunk(path, i).call();
+          
+          content += result[0]; // Append the chunk
+          contentType = result[1]; // Keep content type consistent
+          
+          console.log(`Fetched chunk ${i + 1}:`, result[0]);
+      }
+
+      console.log(`Completed fetching resource for path: ${path}`);
+      console.log(`Content type: ${contentType}`);
+      return { content, contentType };
+  } catch (error) {
+      console.error('Error fetching resource chunks:', error);
+      return null;
+  }
+}
+
+
+
 
 var viewMap = {} // id: view
 var viewStateMap = {} // id: view state
@@ -176,9 +240,7 @@ function createView (existingViewId, id, webPreferences, boundsString, events) {
   // show an "open in app" prompt for external protocols
 
   function handleExternalProtocol (e, url, isInPlace, isMainFrame, frameProcessId, frameRoutingId) {
-    var knownProtocols = ['http', 'https', 'web3', 'file', 'min', 'about', 'data', 'javascript', 'chrome'] // TODO anything else?
-    console.log(`viewManager:handleExternalProtocol protocol = ${url.split(':')[0]}`)
-
+    var knownProtocols = ['http', 'https', 'file', 'min', 'about', 'data', 'javascript', 'chrome','web'] // TODO anything else?
     if (!knownProtocols.includes(url.split(':')[0])) {
       console.log(`viewManager:Unknown protocol found: ${url.split(':')[0]}`)
       var externalApp = app.getApplicationNameForProtocol(url)
@@ -386,29 +448,26 @@ function downloadWebContractFiles(path) {
 }
 
 function loadURLInView (id, url, win) {
-  console.log(`viewManager:loadURLInView ${url} in ${id}`)
-  // wait until the first URL is loaded to set the background color so that new tabs can use a custom background
+  console.log('Debug: Loading URL in view:', url);
   if (!viewStateMap[id].loadedInitialURL) {
-    // console.log(`${url} initialLoad: ${false}`)
-
-    // Give the site a chance to display something before setting the background, in case it has its own dark theme
     viewMap[id].webContents.once('dom-ready', function() {
       console.log(`viewManager:did-finish-load URL = ${url}; id = ${id}`)
       viewMap[id].setBackgroundColor('#fff')
     })
-    // If the view has no URL, it won't be attached yet
     if (win && id === windows.getState(win).selectedView) {
       win.setBrowserView(viewMap[id])
     }
   }
-  if (url.split(':')[0] === 'web3') {
-    console.log(`viewManager:loadWebContract (load and save html to cache/[url] folder)`)
-    url = downloadWebContractFiles((url.slice(7)).split('?')[0])
-  } else {
-    viewMap[id].webContents.loadURL(url)
-  }
+  
+  // Load the URL directly, including web3:// URLs
+  viewMap[id].webContents.loadURL(url).catch(error => {
+    console.error('Error loading URL:', error);
+    viewMap[id].webContents.loadURL(webviews.internalPages.error + '?ec=' + error.errorCode + '&url=' + encodeURIComponent(url));
+  });
+  
   viewStateMap[id].loadedInitialURL = true
 }
+
 
 ipc.on('loadURLInView', function (e, args) {
   

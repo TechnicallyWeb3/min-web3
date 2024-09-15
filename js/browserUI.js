@@ -1,3 +1,5 @@
+const { ipcRenderer } = require('electron');
+
 var statistics = require('js/statistics.js')
 var searchEngine = require('js/util/searchEngine.js')
 var urlParser = require('js/util/urlParser.js')
@@ -274,6 +276,12 @@ tabBar.events.on('tab-closed', function (id) {
   closeTab(id)
 })
 
+ipc.on('focusWebview', function (e, tabId) {
+  console.log("Received focusWebview event in browserUI", tabId);
+  webviews.focus(tabId);
+  tabEditor.hide();
+});
+
 module.exports = {
   addTask,
   addTab,
@@ -286,3 +294,5 @@ module.exports = {
   moveTabLeft,
   moveTabRight
 }
+
+
