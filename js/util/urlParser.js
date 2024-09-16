@@ -1,6 +1,6 @@
 const punycode = require('punycode');
 const path = require('path');
-const searchEngine = require('util/searchEngine.js');
+const searchEngine = require('../util/searchEngine.js');
 const hosts = require('./hosts.js');
 const httpsTopSites = require('../../ext/httpsUpgrade/httpsTopSites.json');
 const publicSuffixes = require('../../ext/publicSuffixes/public_suffix_list.json');

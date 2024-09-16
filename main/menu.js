@@ -340,6 +340,12 @@ function buildAppMenu (options = {}) {
           click: function (item, focusedWindow) {
             if (focusedWindow) focusedWindow.toggleDevTools()
           }
+        },
+        {
+          label: 'IDE',
+          click: function (item, window) {
+            sendIPCToWindow(window, 'open-ide')
+          }
         }
       ]
     },

@@ -1,5 +1,9 @@
+const isNode = typeof window === 'undefined';
+const fs = isNode ? require('fs') : null;
+const ipc = isNode ? null : require('electron').ipcRenderer;
+
 var settings = {
-  filePath: window.globalArgs['user-data-path'] + (process.platform === 'win32' ? '\\' : '/') + 'settings.json',
+  filePath: isNode ? null : window.globalArgs['user-data-path'] + (process.platform === 'win32' ? '\\' : '/') + 'settings.json',
   list: {},
   onChangeCallbacks: [],
   runChangeCallbacks (key) {
@@ -27,30 +31,45 @@ var settings = {
   },
   set: function (key, value) {
     settings.list[key] = value
-    ipc.send('settingChanged', key, value)
+    if (!isNode) {
+      ipc.send('settingChanged', key, value)
+    }
     settings.runChangeCallbacks(key)
   },
   initialize: function () {
-    var fileData
-    try {
-      fileData = fs.readFileSync(settings.filePath, 'utf-8')
-    } catch (e) {
-      if (e.code !== 'ENOENT') {
-        console.warn(e)
+    if (isNode) {
+      // In Node.js environment, we might want to load settings differently
+      // For now, we'll just initialize an empty list
+      settings.list = {};
+    } else {
+      var fileData
+      try {
+        fileData = fs.readFileSync(settings.filePath, 'utf-8')
+      } catch (e) {
+        if (e.code !== 'ENOENT') {
+          console.warn(e)
+        }
       }
-    }
-    if (fileData) {
-      settings.list = JSON.parse(fileData)
-    }
+      if (fileData) {
+        settings.list = JSON.parse(fileData)
+      }
 
-    settings.runChangeCallbacks()
+      settings.runChangeCallbacks()
 
-    ipc.on('settingChanged', function (e, key, value) {
-      settings.list[key] = value
-      settings.runChangeCallbacks(key)
-    })
+      ipc.on('settingChanged', function (e, key, value) {
+        settings.list[key] = value
+        settings.runChangeCallbacks(key)
+      })
+    }
   }
 }
 
-settings.initialize()
-module.exports = settings
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = settings;
+} else if (typeof window !== 'undefined') {
+  window.settings = settings;
+}
+
+if (!isNode) {
+  settings.initialize();
+}

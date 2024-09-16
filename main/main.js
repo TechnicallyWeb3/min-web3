@@ -1,6 +1,7 @@
 const electron = require('electron')
 const fs = require('fs')
 const path = require('path')
+const webviews = require('./js/webviews.js')
 
 const {
   app, // Module to control application life.
@@ -355,6 +356,13 @@ function createWindowWithBounds (bounds) {
   return newWin
 }
 
+function registerMinProtocol(session) {
+  session.protocol.registerFileProtocol('min', (request, callback) => {
+    const url = request.url.substr(6)
+    callback({ path: path.normalize(`${__dirname}/../${url}`) })
+  })
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 app.on('ready', function () {
@@ -368,7 +376,7 @@ app.on('ready', function () {
   }
 
   registerBundleProtocol(session.defaultSession)
-
+  registerMinProtocol(session.defaultSession)
 
   const newWin = createWindow()
 

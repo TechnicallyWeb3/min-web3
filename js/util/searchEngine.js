@@ -1,7 +1,15 @@
-if (typeof require !== 'undefined') {
-  var settings = require('util/settings/settings.js')
+const isNode = typeof window === 'undefined';
+let settings;
+
+if (isNode) {
+  const path = require('path');
+  const settingsPath = path.join(__dirname, '..', 'util', 'settings', 'settings.js');
+  settings = require(settingsPath);
+} else {
+  settings = window.settings;
 }
-// otherwise, assume window.settings exists already
+
+const isElectron = typeof process !== 'undefined' && process.versions && process.versions.electron;
 
 var currentSearchEngine = {
   name: '',
@@ -82,23 +90,25 @@ for (const e in searchEngines) {
   } catch (e) {}
 }
 
-settings.listen('searchEngine', function (value) {
-  if (value && value.name) {
-    currentSearchEngine = searchEngines[value.name]
-  } else if (value && value.url) {
-    var searchDomain
-    try {
-      searchDomain = new URL(value.url).hostname.replace('www.', '')
-    } catch (e) {}
-    currentSearchEngine = {
-      name: searchDomain || 'custom',
-      searchURL: value.url,
-      custom: true
+if (!isElectron) {
+  settings.listen('searchEngine', function (value) {
+    if (value && value.name) {
+      currentSearchEngine = searchEngines[value.name] || searchEngines[defaultSearchEngine]
+    } else if (value && value.url) {
+      var searchDomain
+      try {
+        searchDomain = new URL(value.url).hostname.replace('www.', '')
+      } catch (e) {}
+      currentSearchEngine = {
+        name: searchDomain || 'custom',
+        searchURL: value.url,
+        custom: true
+      }
+    } else {
+      currentSearchEngine = searchEngines[defaultSearchEngine]
     }
-  } else {
-    currentSearchEngine = searchEngines[defaultSearchEngine]
-  }
-})
+  })
+}
 
 var searchEngine = {
   getCurrent: function () {
@@ -128,8 +138,8 @@ var searchEngine = {
   }
 }
 
-if (typeof module === 'undefined') {
-  window.currentSearchEngine = currentSearchEngine
-} else {
-  module.exports = searchEngine
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = searchEngine;
+} else if (typeof window !== 'undefined') {
+  window.searchEngine = searchEngine;
 }

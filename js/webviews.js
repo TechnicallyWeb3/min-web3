@@ -1,9 +1,13 @@
-var urlParser = require('util/urlParser.js')
-var settings = require('util/settings/settings.js')
+var urlParser = require('./util/urlParser.js')
 
-/* implements selecting webviews, switching between them, and creating new ones. */
+const isNode = typeof window === 'undefined';
+const electron = isNode ? require('electron') : null;
+const settings = require('./util/settings/settings.js');
 
-var placeholderImg = document.getElementById('webview-placeholder')
+let webviewsElement;
+if (!isNode) {
+  webviewsElement = document.getElementById('webviews');
+}
 
 var hasSeparateTitlebar = settings.get('useSeparateTitlebar')
 var windowIsMaximized = false // affects navbar height on Windows
@@ -365,16 +369,25 @@ const webviews = {
   }
 }
 
-window.addEventListener('resize', throttle(function () {
-  if (webviews.placeholderRequests.length > 0) {
-    // can't set view bounds if the view is hidden
-    return
-  }
-  webviews.resize()
-}, 75))
+if (!isNode) {
+  window.addEventListener('resize', throttle(function () {
+    if (webviews.placeholderRequests.length > 0) {
+      // can't set view bounds if the view is hidden
+      return
+    }
+    webviews.resize()
+  }, 75))
+}
 
-// leave HTML fullscreen when leaving window fullscreen
-ipc.on('leave-full-screen', function () {
+const handleIPC = (event, handler) => {
+  if (isNode) {
+    electron.ipcMain.on(event, handler);
+  } else {
+    ipc.on(event, handler);
+  }
+};
+
+handleIPC('leave-full-screen', function () {
   // electron normally does this automatically (https://github.com/electron/electron/pull/13090/files), but it doesn't work for BrowserViews
   for (var view in webviews.viewFullscreenMap) {
     if (webviews.viewFullscreenMap[view]) {
@@ -393,198 +406,178 @@ webviews.bindEvent('leave-html-full-screen', function (tabId) {
   webviews.resize()
 })
 
-ipc.on('maximize', function () {
+handleIPC('maximize', function () {
   windowIsMaximized = true
   webviews.resize()
 })
 
-ipc.on('unmaximize', function () {
+handleIPC('unmaximize', function () {
   windowIsMaximized = false
   webviews.resize()
 })
 
-ipc.on('enter-full-screen', function () {
+handleIPC('enter-full-screen', function () {
   windowIsFullscreen = true
   webviews.resize()
 })
 
-ipc.on('leave-full-screen', function () {
+handleIPC('leave-full-screen', function () {
   windowIsFullscreen = false
   webviews.resize()
 })
 
-webviews.bindEvent('did-start-navigation', onNavigate)
-webviews.bindEvent('will-redirect', onNavigate)
-webviews.bindEvent('did-navigate', function (tabId, url, httpResponseCode, httpStatusText) {
-  if (url.startsWith('web3://')) {
-    const contractAddress = url.replace('web3://', '');
-    fetchContractHTML(contractAddress)
-      .then(htmlData => {
-        if (htmlData) {
-          onPageURLChange(tabId, url);
-          webviews.callAsync(tabId, 'executeJavaScript', `document.open(); document.write(${JSON.stringify(htmlData)}); document.close();`);
-        } else {
+if (!isNode) {
+  webviews.bindEvent('did-start-navigation', onNavigate)
+  webviews.bindEvent('will-redirect', onNavigate)
+  webviews.bindEvent('did-navigate', function (tabId, url, httpResponseCode, httpStatusText) {
+    if (url.startsWith('web3://')) {
+      const contractAddress = url.replace('web3://', '');
+      fetchContractHTML(contractAddress)
+        .then(htmlData => {
+          if (htmlData) {
+            onPageURLChange(tabId, url);
+            webviews.callAsync(tabId, 'executeJavaScript', `document.open(); document.write(${JSON.stringify(htmlData)}); document.close();`);
+          } else {
+            onPageURLChange(tabId, chain.explorerPrefix + contractAddress);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching contract HTML:', error);
           onPageURLChange(tabId, chain.explorerPrefix + contractAddress);
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching contract HTML:', error);
-        onPageURLChange(tabId, chain.explorerPrefix + contractAddress);
-      });
-  } else {
-    onPageURLChange(tabId, url);
-  }
-})
-
-webviews.bindEvent('did-finish-load', onPageLoad)
-
-webviews.bindEvent('page-title-updated', function (tabId, title, explicitSet) {
-  tabs.update(tabId, {
-    title: title
-  })
-})
-
-webviews.bindEvent('did-fail-load', function (tabId, errorCode, errorDesc, validatedURL, isMainFrame) {
-  if (errorCode && errorCode !== -3 && isMainFrame && validatedURL) {
-    webviews.update(tabId, webviews.internalPages.error + '?ec=' + encodeURIComponent(errorCode) + '&url=' + encodeURIComponent(validatedURL))
-  }
-})
-
-webviews.bindEvent('crashed', function (tabId, isKilled) {
-  var url = tabs.get(tabId).url
-
-  tabs.update(tabId, {
-    url: webviews.internalPages.error + '?ec=crash&url=' + encodeURIComponent(url)
-  })
-
-  // the existing process has crashed, so we can't reuse it
-  webviews.destroy(tabId)
-  webviews.add(tabId)
-
-  if (tabId === tabs.getSelected()) {
-    webviews.setSelected(tabId)
-  }
-})
-
-webviews.bindIPC('getSettingsData', function (tabId, args) {
-  if (!urlParser.isInternalURL(tabs.get(tabId).url)) {
-    throw new Error()
-  }
-  webviews.callAsync(tabId, 'send', ['receiveSettingsData', settings.list])
-})
-webviews.bindIPC('setSetting', function (tabId, args) {
-  if (!urlParser.isInternalURL(tabs.get(tabId).url)) {
-    throw new Error()
-  }
-  settings.set(args[0].key, args[0].value)
-})
-
-settings.listen(function () {
-  tasks.forEach(function (task) {
-    task.tabs.forEach(function (tab) {
-      if (tab.url.startsWith('min://')) {
-        try {
-          webviews.callAsync(tab.id, 'send', ['receiveSettingsData', settings.list])
-        } catch (e) {
-          // webview might not actually exist
-        }
-      }
-      if (tab.url.startsWith('web3://')) {
-        try {
-          webviews.callAsync(tab.id, 'send', ['receiveSettingsData', settings.list])
-        } catch (e) {
-          // webview might not actually exist
-        }
-      }
-    })
-  })
-})
-
-webviews.bindIPC('scroll-position-change', function (tabId, args) {
-  tabs.update(tabId, {
-    scrollPosition: args[0]
-  })
-})
-
-webviews.bindIPC('downloadFile', function (tabId, args) {
-  if (tabs.get(tabId).url.startsWith('min://')) {
-    webviews.callAsync(tabId, 'downloadURL', [args[0]])
-  }
-})
-
-ipc.on('view-event', function (e, args) {
-  webviews.emitEvent(args.event, args.tabId, args.args)
-})
-
-ipc.on('async-call-result', function (e, args) {
-  webviews.asyncCallbacks[args.callId](args.error, args.result)
-  delete webviews.asyncCallbacks[args.callId]
-})
-
-// const { ipcRenderer } = require('electron');
-
-// ipcRenderer.on('renderHTMLInView', function (e, htmlData) {
-//   console.log("WORKING");
-//   console.log(htmlData.ca);
-  
-//   const tabId = getCurrentTabId();
-//   console.log(tabId);
-//   console.log(webviews.hasViewForTab(tabId));
-
-//   if (tabId && webviews.hasViewForTab(tabId)) {
-//     // const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(htmlData)}`;
-//     const newURL = `web3://${htmlData.ca}`;
-//     tabs.update(tabId, { url: newURL });
-//     console.log(htmlData + "HtmlDATA")
-//     webviews.callAsync(tabId, 'executeJavaScript', `document.open(); document.write(${JSON.stringify(htmlData.htmlData )}); document.close();`, () => {
-//       console.log("HTML loaded, sending event to main process");
-//       ipcRenderer.send('htmlLoaded', tabId);
-//     });
-//     //   webviews.callAsync(tabId, 'loadURL', `data:text/html;charset=utf-8,${encodeURIComponent(htmlData.htmlData )}`, () => {
-//     //   console.log("HTML loaded, sending event to main process");
-//     //   ipcRenderer.send('htmlLoaded', tabId);
-//     // });
-//   } else {
-//     console.error('Tab ID not found or invalid');
-//   }
-// });
-
-function getCurrentTabId() {
-  const currentTabId = tabs.getSelected();
-  console.log('Retrieved Tab ID:', currentTabId);
-  return currentTabId;
-}
-
-ipc.on('view-ipc', function (e, args) {
-  if (!webviews.hasViewForTab(args.id)) {
-    // the view could have been destroyed between when the event was occured and when it was recieved in the UI process, see https://github.com/minbrowser/min/issues/604#issuecomment-419653437
-    return
-  }
-  webviews.IPCEvents.forEach(function (item) {
-    if (item.name === args.name) {
-      item.fn(args.id, [args.data], args.frameId, args.frameURL)
+        });
+    } else {
+      onPageURLChange(tabId, url);
     }
   })
-})
 
-setInterval(function () {
-  captureCurrentTab()
-}, 15000)
+  webviews.bindEvent('did-finish-load', onPageLoad)
 
-ipc.on('captureData', function (e, data) {
-  tabs.update(data.id, { previewImage: data.url })
-  if (data.id === webviews.selectedId && webviews.placeholderRequests.length > 0) {
-    placeholderImg.src = data.url
-    placeholderImg.hidden = false
+  webviews.bindEvent('page-title-updated', function (tabId, title, explicitSet) {
+    tabs.update(tabId, {
+      title: title
+    })
+  })
+
+  webviews.bindEvent('did-fail-load', function (tabId, errorCode, errorDesc, validatedURL, isMainFrame) {
+    if (errorCode && errorCode !== -3 && isMainFrame && validatedURL) {
+      webviews.update(tabId, webviews.internalPages.error + '?ec=' + encodeURIComponent(errorCode) + '&url=' + encodeURIComponent(validatedURL))
+    }
+  })
+
+  webviews.bindEvent('crashed', function (tabId, isKilled) {
+    var url = tabs.get(tabId).url
+
+    tabs.update(tabId, {
+      url: webviews.internalPages.error + '?ec=crash&url=' + encodeURIComponent(url)
+    })
+
+    // the existing process has crashed, so we can't reuse it
+    webviews.destroy(tabId)
+    webviews.add(tabId)
+
+    if (tabId === tabs.getSelected()) {
+      webviews.setSelected(tabId)
+    }
+  })
+
+  webviews.bindIPC('getSettingsData', function (tabId, args) {
+    if (!urlParser.isInternalURL(tabs.get(tabId).url)) {
+      throw new Error()
+    }
+    webviews.callAsync(tabId, 'send', ['receiveSettingsData', settings.list])
+  })
+  webviews.bindIPC('setSetting', function (tabId, args) {
+    if (!urlParser.isInternalURL(tabs.get(tabId).url)) {
+      throw new Error()
+    }
+    settings.set(args[0].key, args[0].value)
+  })
+
+  if (!isNode) {
+    settings.listen(function () {
+      tasks.forEach(function (task) {
+        task.tabs.forEach(function (tab) {
+          if (tab.url.startsWith('min://')) {
+            try {
+              webviews.callAsync(tab.id, 'send', ['receiveSettingsData', settings.list])
+            } catch (e) {
+              // webview might not actually exist
+            }
+          }
+          if (tab.url.startsWith('web3://')) {
+            try {
+              webviews.callAsync(tab.id, 'send', ['receiveSettingsData', settings.list])
+            } catch (e) {
+              // webview might not actually exist
+            }
+          }
+        })
+      })
+    })
   }
-})
 
-/* focus the view when the window is focused */
+  webviews.bindIPC('scroll-position-change', function (tabId, args) {
+    tabs.update(tabId, {
+      scrollPosition: args[0]
+    })
+  })
 
-ipc.on('windowFocus', function () {
-  if (webviews.placeholderRequests.length === 0 && document.activeElement.tagName !== 'INPUT') {
-    webviews.focus()
+  webviews.bindIPC('downloadFile', function (tabId, args) {
+    if (tabs.get(tabId).url.startsWith('min://')) {
+      webviews.callAsync(tabId, 'downloadURL', [args[0]])
+    }
+  })
+
+  handleIPC('view-event', function (e, args) {
+    webviews.emitEvent(args.event, args.tabId, args.args)
+  })
+
+  handleIPC('async-call-result', function (e, args) {
+    webviews.asyncCallbacks[args.callId](args.error, args.result)
+    delete webviews.asyncCallbacks[args.callId]
+  })
+
+  if (!isNode) {
+    function getCurrentTabId() {
+      const currentTabId = tabs.getSelected();
+      console.log('Retrieved Tab ID:', currentTabId);
+      return currentTabId;
+    }
+
+    handleIPC('view-ipc', function (e, args) {
+      if (!webviews.hasViewForTab(args.id)) {
+        // the view could have been destroyed between when the event was occured and when it was recieved in the UI process, see https://github.com/minbrowser/min/issues/604#issuecomment-419653437
+        return
+      }
+      webviews.IPCEvents.forEach(function (item) {
+        if (item.name === args.name) {
+          item.fn(args.id, [args.data], args.frameId, args.frameURL)
+        }
+      })
+    })
+
+    if (!isNode) {
+      setInterval(function () {
+        captureCurrentTab()
+      }, 15000)
+    }
+
+    handleIPC('captureData', function (e, data) {
+      tabs.update(data.id, { previewImage: data.url })
+      if (data.id === webviews.selectedId && webviews.placeholderRequests.length > 0) {
+        placeholderImg.src = data.url
+        placeholderImg.hidden = false
+      }
+    })
+
+    /* focus the view when the window is focused */
+
+    handleIPC('windowFocus', function () {
+      if (webviews.placeholderRequests.length === 0 && document.activeElement.tagName !== 'INPUT') {
+        webviews.focus()
+      }
+    })
   }
-})
+}
 
 module.exports = webviews

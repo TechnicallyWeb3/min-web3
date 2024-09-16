@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@electron/fuses": "^1.7.0",
+    "ace-builds": "^1.36.2",
     "bufferutil": "^4.0.8",
     "chokidar": "^3.5.3",
     "dexie": "^3.0.3",

@@ -1,17 +1,17 @@
 const { ipcRenderer } = require('electron');
 
 var statistics = require('js/statistics.js')
-var searchEngine = require('js/util/searchEngine.js')
-var urlParser = require('js/util/urlParser.js')
+var searchEngine = require('./util/searchEngine.js')
+var urlParser = require('./util/urlParser.js')
 
 /* common actions that affect different parts of the UI (webviews, tabstrip, etc) */
 
-var settings = require('util/settings/settings.js')
-var webviews = require('webviews.js')
-var focusMode = require('focusMode.js')
-var tabBar = require('navbar/tabBar.js')
-var tabEditor = require('navbar/tabEditor.js')
-var searchbar = require('searchbar/searchbar.js')
+var settings = require('./util/settings/settings.js')
+var webviews = require('./webviews.js')
+var focusMode = require('./focusMode.js')
+var tabBar = require('./navbar/tabBar.js')
+var tabEditor = require('./navbar/tabEditor.js')
+var searchbar = require('./searchbar/searchbar.js')
 
 /* creates a new task */
 
@@ -281,6 +281,17 @@ ipc.on('focusWebview', function (e, tabId) {
   webviews.focus(tabId);
   tabEditor.hide();
 });
+
+ipc.on('open-ide', function () {
+  // Create a new tab for the IDE
+  var ideTab = tabs.add({
+    url: 'min://app/pages/ide/index.html',
+    private: false
+  })
+  addTab(ideTab, {
+    enterEditMode: false
+  })
+})
 
 module.exports = {
   addTask,

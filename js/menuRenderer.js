@@ -142,5 +142,38 @@ module.exports = {
     ipc.on('goForward', function () {
       webviews.callAsync(tabs.getSelected(), 'goForward')
     })
+
+    ipc.on('openIDE', function () {
+      // Add the logic to open the IDE here
+      console.log('Opening IDE...')
+      // For now, we'll just log a message. Later, we'll implement the actual IDE opening logic.
+    })
   }
 }
+
+var developerMenu = [
+  {
+    label: 'Inspect Page',
+    click: function (item, window) {
+      sendIPCToWindow(window, 'inspectPage')
+    }
+  },
+  {
+    label: 'Reload Browser',
+    click: function (item, window) {
+      sendIPCToWindow(window, 'reloadBrowser')
+    }
+  },
+  {
+    label: 'Inspect Browser',
+    click: function (item, window) {
+      BrowserWindow.getFocusedWindow().webContents.openDevTools()
+    }
+  },
+  {
+    label: 'Open IDE',
+    click: function (item, window) {
+      sendIPCToWindow(window, 'openIDE')
+    }
+  }
+]

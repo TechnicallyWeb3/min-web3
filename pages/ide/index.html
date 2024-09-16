@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Min IDE</title>
+  <style>
+    #editor { 
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="editor"></div>
+  
+  <script src="../../node_modules/ace-builds/src-min-noconflict/ace.js"></script>
+  <script>
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/monokai");
+    editor.session.setMode("ace/mode/javascript");
+    editor.setFontSize(14);
+  </script>
+</body>
+</html>
