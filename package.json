@@ -30,11 +30,13 @@
   },
   "dependencies": {
     "@electron/fuses": "^1.7.0",
+    "@ensdomains/ensjs": "^4.0.1-alpha.0",
     "bufferutil": "^4.0.8",
     "chokidar": "^3.5.3",
     "dexie": "^3.0.3",
     "dragula": "github:minbrowser/dragula",
     "electron-squirrel-startup": "^1.0.0",
+    "ethers": "^6.13.2",
     "expr-eval": "^2.0.2",
     "mousetrap": "^1.5.3",
     "node-abi": "^3.8.0",

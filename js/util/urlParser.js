@@ -4,9 +4,9 @@ const searchEngine = require('util/searchEngine.js');
 const hosts = require('./hosts.js');
 const httpsTopSites = require('../../ext/httpsUpgrade/httpsTopSites.json');
 const publicSuffixes = require('../../ext/publicSuffixes/public_suffix_list.json');
-const { Web3 } = require('web3');
-const { fetchContractHTML } = require('./web3Helpers.js');
-const { ipcRenderer } = require('electron')
+// const { fetchContractHTML } = require('./web3Helpers.js');
+const { ipcRenderer } = require('electron');
+const { getENSOwner } = require('./ensHelper.js');
 
 const chain = {
   chainName: 'Polygon',
@@ -94,8 +94,13 @@ var urlParser = {
     }
 
     // Check for ENS domains
-    if (this.validENSRegex.test(url)) {
-      return `https://google.com`;
+    if (urlParser.validENSRegex.test(url)) {
+      console.log('ENS domain detected', url);
+      getENSOwner(url).then((owner) => {
+        console.log(owner);
+        return `https://google.com`;
+      });
+      
     }
 
     if (url.startsWith('web3://')) {
