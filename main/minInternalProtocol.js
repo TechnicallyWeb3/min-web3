@@ -1,4 +1,5 @@
 const { pathToFileURL } = require('url')
+const { getENSOwner } = require(path.join(__dirname, '..','min-web3', 'main', 'ensHelper'));
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -20,6 +21,8 @@ protocol.registerSchemesAsPrivileged([
     }
   }
 ])
+
+
 
 function registerBundleProtocol (ses) {
   ses.protocol.handle('min', (req) => {
@@ -55,33 +58,59 @@ function registerBundleProtocol (ses) {
   })
 
   ses.protocol.handle('web', async (req) => {
-    console.log('Debug: Received web3 request:', req.url)
-    const url = new URL(req.url)
-    const contractAddress = url.hostname
-    const path = url.pathname || '/'
-    console.log('Debug: Contract address:', contractAddress)
-    console.log('Debug: Path:', path)
+    console.log('Received web3 request:', req.url);
+    const url = new URL(req.url);
+    let contractAddress = url.hostname;
+    const path = url.pathname || '/';
+    
+    console.log('Debug: Initial contract address or ENS:', contractAddress);
+
+    function isValidENS(domain) {
+      // This is a basic check. You might want to make it more robust.
+      return domain.endsWith('.eth') || domain.includes('.'); // Checks for .eth or any subdomain
+    }
+
+    
     try {
-      const resource = await fetchContractResource(contractAddress, path)
-      console.log('Debug: Resource:', resource.content)
-      console.log('Debug: Resource:', resource.contentType)
+      // Check if the hostname is an ENS domain
+      if (isValidENS(contractAddress)) {
+        console.log('Debug: ENS domain detected, resolving...');
+        const ensResult = await getENSOwner(contractAddress);
+        if(ensResult){
+          contractAddress = ensResult;
+        }
+        // if (ensResult.status === 'website' || ensResult.status === 'owner') {
+        //   contractAddress = ensResult.address;
+        //   console.log('Debug: Resolved ENS to address:', contractAddress);
+        // } else {
+        //   throw new Error('Unable to resolve ENS domain');
+        // }
+      }
+      
+      console.log('Debug: Final contract address:', contractAddress);
+      console.log('Debug: Path:', path);
+      
+      const resource = await fetchContractResource(contractAddress, path);
+      console.log('Debug: Resource:', resource.content);
+      console.log('Debug: Resource type:', resource.contentType);
+      
       if (resource) {
         return new Response(resource.content, {
           status: 200,
           headers: { 'content-type': resource.contentType }
-        })
+        });
       } else {
         return new Response('Resource not found', {
           status: 404,
           headers: { 'content-type': 'text/plain' }
-        })
+        });
       }
     } catch (error) {
-      console.error('Error fetching resource:', error)
-      return new Response('Error fetching resource', {
+      console.error('Error processing request:', error);
+      return new Response(`Error: ${error.message}`, {
         status: 500,
         headers: { 'content-type': 'text/plain' }
-      })
+      });
     }
   })
 }

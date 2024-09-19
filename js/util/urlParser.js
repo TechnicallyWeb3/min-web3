@@ -6,7 +6,7 @@ const httpsTopSites = require('../../ext/httpsUpgrade/httpsTopSites.json');
 const publicSuffixes = require('../../ext/publicSuffixes/public_suffix_list.json');
 // const { fetchContractHTML } = require('./web3Helpers.js');
 const { ipcRenderer } = require('electron');
-const { getENSOwner } = require('./ensHelper.js');
+
 
 const chain = {
   chainName: 'Polygon',
@@ -96,10 +96,11 @@ var urlParser = {
     // Check for ENS domains
     if (urlParser.validENSRegex.test(url)) {
       console.log('ENS domain detected', url);
-      getENSOwner(url).then((owner) => {
-        console.log(owner);
-        return `https://google.com`;
-      });
+      return `web://${url}`;
+      // return getENSOwner(url).then((owner) => {
+      //   console.log(owner + "Returned here");
+      //   return `web://${owner}`
+      // });
       
     }
 
