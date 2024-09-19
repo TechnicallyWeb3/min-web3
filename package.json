@@ -36,6 +36,7 @@
     "dexie": "^3.0.3",
     "dragula": "github:minbrowser/dragula",
     "electron-squirrel-startup": "^1.0.0",
+    "eth-ens-namehash": "^2.0.8",
     "ethers": "^6.13.2",
     "expr-eval": "^2.0.2",
     "mousetrap": "^1.5.3",
