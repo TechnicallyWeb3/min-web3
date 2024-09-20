@@ -377,18 +377,18 @@ async function getENSOwner(ensDomain) {
         return websiteAddress;
       }
 
-      // If no website address is set, fall back to the ENS owner
-      const ensRegistry = new web3.eth.Contract(ENS_REGISTRY_ABI, ENS_REGISTRY_ADDRESS);
-      const ownerAddress = await ensRegistry.methods.owner(hashedName).call();
-      debug(`Owner address for ${fullDomain}: ${ownerAddress}`);
+    //   // If no website address is set, fall back to the ENS owner
+    //   const ensRegistry = new web3.eth.Contract(ENS_REGISTRY_ABI, ENS_REGISTRY_ADDRESS);
+    //   const ownerAddress = await ensRegistry.methods.owner(hashedName).call();
+    //   debug(`Owner address for ${fullDomain}: ${ownerAddress}`);
 
-      if (ownerAddress === '0x0000000000000000000000000000000000000000') {
-        debug('Owner address is null, domain might not be registered');
-        return { status: 'unregistered', address: null };
-      }
+    //   if (ownerAddress === '0x0000000000000000000000000000000000000000') {
+    //     debug('Owner address is null, domain might not be registered');
+    //     return { status: 'unregistered', address: null };
+    //   }
 
-      debug(`Returning owner address: ${ownerAddress}`);
-      return { status: 'owner', address: ownerAddress };
+    //   debug(`Returning owner address: ${ownerAddress}`);
+    //   return { status: 'owner', address: ownerAddress };
     } catch (error) {
       debug('Error getting ENS owner:', error);
       console.error('Error getting ENS owner:', error);
