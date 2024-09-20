@@ -1,5 +1,6 @@
 const { pathToFileURL } = require('url')
 const { getENSOwner } = require(path.join(__dirname, '..','min-web3', 'main', 'ensHelper'));
+const { resolveUnstoppableDomain } = require(path.join(__dirname, '..','min-web3', 'main', 'unstoppableHelper'));
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -66,16 +67,21 @@ function registerBundleProtocol (ses) {
     console.log('Debug: Initial contract address or ENS:', contractAddress);
 
     function isValidENS(domain) {
-      // This is a basic check. You might want to make it more robust.
-      return domain.endsWith('.eth') || domain.includes('.'); // Checks for .eth or any subdomain
+      return /^([a-z0-9-]+\.)*[a-z0-9-]+\.eth$/i.test(domain);
+    }
+
+    function isValidUnstoppableDomain(domain) {
+
+      const unstoppableTLDs = ['.crypto', '.zil', '.nft', '.blockchain', '.bitcoin', '.x', '.888', '.dao', '.wallet','unstoppable'];
+      return unstoppableTLDs.some(tld => domain.endsWith(tld));
     }
 
     
     try {
-      // Check if the hostname is an ENS domain
       if (isValidENS(contractAddress)) {
         console.log('Debug: ENS domain detected, resolving...');
         const ensResult = await getENSOwner(contractAddress);
+        console.log(ensResult);
         if(ensResult.status === 'resolved'){
           contractAddress = ensResult.address;
         }
@@ -85,6 +91,18 @@ function registerBundleProtocol (ses) {
         // } else {
         //   throw new Error('Unable to resolve ENS domain');
         // }
+      } 
+
+       else if (isValidUnstoppableDomain(contractAddress)) {
+        console.log('Debug: Unstoppable domain detected, resolving...');
+        const unstoppableResult = await resolveUnstoppableDomain(contractAddress);
+        if (unstoppableResult.status === 'resolved') {
+          console.log("WROKING");
+          contractAddress = unstoppableResult.address;
+          console.log('Debug: Resolved Unstoppable domain to address:', contractAddress);
+        } else {
+          throw new Error(`Unable to resolve Unstoppable domain: ${unstoppableResult.error || 'Unknown error'}`);
+        }
       }
 
     

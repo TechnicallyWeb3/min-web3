@@ -34,12 +34,13 @@ function renderHTML(ca, htmlData) {
     console.error('Error sending data to IPC:', error);
   }
 }
-
+const unstoppableTLDs = ['.crypto', '.zil', '.nft', '.blockchain', '.bitcoin', '.x', '.888', '.dao', '.wallet', 'unstoppable'];
 
 var urlParser = {
   validIP4Regex: /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/i,
   validDomainRegex: /^(?!-)(?:.*@)*?([a-z0-9-._]+[a-z0-9]|\[[:a-f0-9]+\])/i,
   validWeb3Regex: /^0x[a-fA-F0-9]{40}$/,
+  validUnstoppableRegex: new RegExp(`^([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+(?:${unstoppableTLDs.join('|')})$`, 'i'),
   validENSRegex: /^([a-z0-9-]+\.)*[a-z0-9-]+\.eth$/i,
   unicodeRegex: /[^\u0000-\u00ff]/,
   removeProtocolRegex: /^(https?|file|web3):\/\//i,
@@ -102,6 +103,11 @@ var urlParser = {
       //   return `web://${owner}`
       // });
       
+    }
+
+    if(urlParser.validUnstoppableRegex.test(url)){
+      console.log('Unstoppable domain detected', url);
+      return `web://${url}`;
     }
 
     if (url.startsWith('web3://')) {
