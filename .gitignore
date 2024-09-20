@@ -8,3 +8,4 @@ main.build.js
 package-lock.json
 yarn.lock
 package* copy.json
+/.vs
