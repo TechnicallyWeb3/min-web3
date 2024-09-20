@@ -76,16 +76,18 @@ function registerBundleProtocol (ses) {
       if (isValidENS(contractAddress)) {
         console.log('Debug: ENS domain detected, resolving...');
         const ensResult = await getENSOwner(contractAddress);
-        // if(ensResult){
-        //   contractAddress = ensResult;
-        // }
-        if (ensResult.status === 'website' || ensResult.status === 'owner') {
+        if(ensResult.status === 'resolved'){
           contractAddress = ensResult.address;
-          console.log('Debug: Resolved ENS to address:', contractAddress);
-        } else {
-          throw new Error('Unable to resolve ENS domain');
         }
+        // if (ensResult.status === 'website' || ensResult.status === 'owner') {
+        //   contractAddress = ensResult.address;
+        //   console.log('Debug: Resolved ENS to address:', contractAddress);
+        // } else {
+        //   throw new Error('Unable to resolve ENS domain');
+        // }
       }
+
+    
       
       console.log('Debug: Final contract address:', contractAddress);
       console.log('Debug: Path:', path);

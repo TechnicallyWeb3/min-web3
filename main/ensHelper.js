@@ -2,7 +2,7 @@ const { Web3 } = require('web3');
 const debug = require('debug')('ensHelper'); // Add this line
 const namehash = require('eth-ens-namehash');
 
-const providerUrl = 'https://polygon-mainnet.infura.io/v3/0d66eec7a2e041a79a29a5361c4368e6'; // Replace with your Infura project ID or another Ethereum provider
+const providerUrl = 'https://mainnet.infura.io/v3/2bc31646c11242b798f93e0f683055c1'; // Replace with your Infura project ID or another Ethereum provider
 const web3 = new Web3(new Web3.providers.HttpProvider(providerUrl));
 
 const CUSTOM_ENS_RESOLVER_ADDRESS = '0x55906bEbf016553ece7D2005C6efFE903ba22D09'; // Replace with your custom resolver contract address
@@ -356,44 +356,48 @@ const CUSTOM_ENS_RESOLVER_ABI = [
 	}
 ]
 
+
 async function getENSOwner(ensDomain) {
-    debug(`Getting ENS owner for domain: ${ensDomain}`);
-    try {
-      // Ensure we're working with the full name, including .eth if it's not present
-      const fullDomain = ensDomain.includes('.') ? ensDomain : `${ensDomain}.eth`;
-      const hashedName = namehash.hash(fullDomain);
-      console.log(hashedName);
-      debug(`Full domain: ${fullDomain}, Namehash: ${hashedName}`);
-
-      const customResolverContract = new web3.eth.Contract(CUSTOM_ENS_RESOLVER_ABI, CUSTOM_ENS_RESOLVER_ADDRESS);
-      console.log(customResolverContract);
-      // Get the website address associated with the ENS name
-      const websiteAddress = await customResolverContract.methods.websiteAddr(hashedName).call();
-      console.log(websiteAddress);
-      debug(`Website address for ${fullDomain}: ${websiteAddress}`);
-
-      if (websiteAddress !== '0x0000000000000000000000000000000000000000') {
-        debug(`Returning website address: ${websiteAddress}`);
-        return websiteAddress;
-      }
-
-      // If no website address is set, fall back to the ENS owner
-      const ensRegistry = new web3.eth.Contract(ENS_REGISTRY_ABI, ENS_REGISTRY_ADDRESS);
-      const ownerAddress = await ensRegistry.methods.owner(hashedName).call();
-      debug(`Owner address for ${fullDomain}: ${ownerAddress}`);
-
-      if (ownerAddress === '0x0000000000000000000000000000000000000000') {
-        debug('Owner address is null, domain might not be registered');
-        return { status: 'unregistered', address: null };
-      }
-
-      debug(`Returning owner address: ${ownerAddress}`);
-      return { status: 'owner', address: ownerAddress };
-    } catch (error) {
-      debug('Error getting ENS owner:', error);
-      console.error('Error getting ENS owner:', error);
-      return { status: 'error', address: null, error: error.message };
-    }
+	debug(`Getting ENS owner for domain: ${ensDomain}`);
+	try {
+	  // Resolve the ENS name to an address
+	  const address = await web3.eth.ens.getAddress(ensDomain);
+	  
+	  if (address && address !== '0x0000000000000000000000000000000000000000') {
+		debug(`Resolved address for ${ensDomain}: ${address}`);
+		return { status: 'resolved', address: address };
+	  } else {
+		debug(`Unable to resolve address for ${ensDomain}`);
+		return { status: 'unresolved', address: null };
+	  }
+	} catch (error) {
+	  debug('Error resolving ENS:', error);
+	  console.error('Error resolving ENS:', error);
+  
+	  let errorMessage;
+	  let errorStatus;
+  
+	  if (error.message.includes('ENS name not found')) {
+		errorMessage = `ENS name not found: ${ensDomain}`;
+		errorStatus = 'not_found';
+	  } else if (error.message.includes('network')) {
+		errorMessage = 'Network error: Unable to connect to Ethereum network';
+		errorStatus = 'network_error';
+	  } else if (error.message.includes('Invalid ENS name')) {
+		errorMessage = `Invalid ENS name: ${ensDomain}`;
+		errorStatus = 'invalid_name';
+	  } else {
+		errorMessage = `Unexpected error resolving ENS name: ${error.message}`;
+		errorStatus = 'unknown_error';
+	  }
+  
+	  return { 
+		status: 'error', 
+		address: null, 
+		error: errorMessage,
+		errorStatus: errorStatus
+	  };
+	}
   }
 
 async function resolveENS(ensDomain) {

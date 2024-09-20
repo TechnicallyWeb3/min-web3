@@ -11,7 +11,6 @@ async function getENSOwner(ensDomain) {
 	try {
 		// Resolve the ENS name to an address
 		const address = await web3.eth.ens.getAddress(ensDomain);
-        console.log(address);
 		
 		if (address && address !== '0x0000000000000000000000000000000000000000') {
 			debug(`Resolved address for ${ensDomain}: ${address}`);
