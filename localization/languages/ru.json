@@ -238,6 +238,9 @@
     "appMenuShowAll": "Показать всё",
     "appMenuQuit": "Выйти из %n",
     "appMenuBringToFront": "Переместить всё на передний план",
+    /* Tab menu */
+    "tabMenuNewWindow": "Переместить вкладку в новое окно",
+    "tabMenuReload": "Перезагрузить",
     /* PDF Viewer */
     "PDFInvertPage": "Инвертировать цвета страницы",
     "PDFPageCounter": {
@@ -287,6 +290,7 @@
     "passwordCaptureSave": "Сохранить",
     "passwordCaptureDontSave": "Не сохранять",
     "passwordCaptureNeverSave": "Никогда не сохранять",
+    "generatePassword": "Сгенерировать пароль",
     /* Password viewer */
     "savedPasswordsHeading": "Сохраненные пароли",
     "savedPasswordsEmpty": "Нет сохраненных паролей.",

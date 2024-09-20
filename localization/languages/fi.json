@@ -238,6 +238,9 @@
     "appMenuShowAll": "Näytä kaikki",
     "appMenuQuit": "Sulje %n",
     "appMenuBringToFront": "Tuo kaikki etualalle",
+    /* Tab menu */
+    "tabMenuNewWindow": null, // missing translation
+    "tabMenuReload": null, // missing translation
     /* PDF Viewer */
     "PDFInvertPage": "Käännä sivun värit",
     "PDFPageCounter": {
@@ -287,6 +290,7 @@
     "passwordCaptureSave": "Tallenna",
     "passwordCaptureDontSave": "Älä tallenna",
     "passwordCaptureNeverSave": "Älä tallenna koskaan",
+    "generatePassword": null, // missing translation
     /* Password viewer */
     "savedPasswordsHeading": "Tallennetut salasanat",
     "savedPasswordsEmpty": "Ei tallennettuja salasanoja.",

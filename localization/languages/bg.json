@@ -235,6 +235,9 @@
     "appMenuShowAll": "Покажи всички",
     "appMenuQuit": "Излизане от %n",
     "appMenuBringToFront": "Извеждане на всички отпред",
+    /* Tab menu */
+    "tabMenuNewWindow": null, // missing translation
+    "tabMenuReload": null, // missing translation
     /* PDF Viewer */
     "PDFInvertPage": null, //missing translation
     "PDFPageCounter": {
@@ -284,6 +287,7 @@
     "passwordCaptureSave": "Запази",
     "passwordCaptureDontSave": "Не запазвай",
     "passwordCaptureNeverSave": null, //missing translation
+    "generatePassword": null, // missing translation
     /* Password viewer */
     "savedPasswordsHeading": "Запазени пароли",
     "savedPasswordsEmpty": "Няма запазени пароли.",
