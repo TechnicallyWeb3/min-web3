@@ -26,7 +26,6 @@ crashReporter.start({
 ipc.on('loadHTMLInView', (event, {ca,htmlData}) => {
   console.log('HTML data received in main process:', htmlData);
   try {
-    // console.log(html);
     // Perform actions with htmlData, like sending it back to a specific webview
     event.sender.send('renderHTMLInView', {ca,htmlData});
   } catch (error) {
