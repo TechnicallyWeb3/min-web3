@@ -238,6 +238,9 @@
     "appMenuShowAll": "Tümünü Göster",
     "appMenuQuit": "%n Çıkış",
     "appMenuBringToFront": "Tümünü Öne Getir",
+    /* Tab menu */
+    "tabMenuNewWindow": null, // missing translation
+    "tabMenuReload": null, // missing translation
     /* PDF Viewer */
     "PDFInvertPage": "Sayfa renklerini ters çevir",
     "PDFPageCounter": {
@@ -287,6 +290,7 @@
     "passwordCaptureSave": "Kaydet",
     "passwordCaptureDontSave": "Kaydetme",
     "passwordCaptureNeverSave": "Asla kaydetme", 
+    "generatePassword": null, // missing translation
     /* Password viewer */
     "savedPasswordsHeading": "Kayıtlı Parolalar",
     "savedPasswordsEmpty": "Kaydedilmiş parola yok.",

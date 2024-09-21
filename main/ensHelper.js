@@ -3,7 +3,7 @@ const debug = require('debug')('ensHelper'); // Add this line
 const namehash = require('eth-ens-namehash');
 
 const providerUrl = 'https://mainnet.infura.io/v3/2bc31646c11242b798f93e0f683055c1'; // Replace with your Infura project ID or another Ethereum provider
-const web3 = new Web3(new Web3.providers.HttpProvider(providerUrl));
+const web3ens = new Web3(new Web3.providers.HttpProvider(providerUrl));
 
 const CUSTOM_ENS_RESOLVER_ADDRESS = '0x55906bEbf016553ece7D2005C6efFE903ba22D09'; // Replace with your custom resolver contract address
 const CUSTOM_ENS_RESOLVER_ABI = [
@@ -361,7 +361,7 @@ async function getENSOwner(ensDomain) {
 	debug(`Getting ENS owner for domain: ${ensDomain}`);
 	try {
 	  // Resolve the ENS name to an address
-	  const address = await web3.eth.ens.getAddress(ensDomain);
+	  const address = await web3ens.eth.ens.getAddress(ensDomain);
 	  
 	  if (address && address !== '0x0000000000000000000000000000000000000000') {
 		debug(`Resolved address for ${ensDomain}: ${address}`);
