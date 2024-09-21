@@ -10,6 +10,7 @@
   padding-top: var(--control-space-top);
   padding-left: var(--control-space-left);
   padding-right: var(--control-space-right);
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 /* when the tab-group is white, we need a line to separate it from the webviews */
@@ -85,6 +86,7 @@ body.linux #menu-button {
   flex: 1;
   position: relative;
   overflow: hidden;
+  background-color: rgba(0, 0, 0, 0.15);
 }
 #tabs #tabs-inner {
   display: flex;
@@ -98,6 +100,7 @@ body.linux #menu-button {
 }
 
 .tab-item {
+
   flex: 1;
   min-width: 125px;
   transition: 0.2s transform;
@@ -111,7 +114,9 @@ body.linux #menu-button {
   gap: 0.5rem;
   padding-left: 0.5rem;
   padding-right: 0.5rem;
+  border-right: 1px solid rgba(122, 122, 122, 0.635);
 }
+
 .tab-item.active {
   min-width: 168px;
 }
@@ -377,9 +382,7 @@ body.windows.dark-theme .navbar-action-button:not(:disabled):hover {
   font-size: 1.25em;
   box-sizing: border-box;
   order: 1;
-}
-.tab-item .tab-close-button:hover:after {
-  font-size: 0.9em;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 /* when the tab is hovered, hide info buttons and show the close button */
