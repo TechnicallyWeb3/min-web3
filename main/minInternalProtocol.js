@@ -523,7 +523,7 @@ function registerBundleProtocol (ses) {
     return net.fetch(pathToFileURL(pathToServe).toString())
   })
 
-  ses.protocol.handle('web', async (req) => {
+  ses.protocol.handle('wttp', async (req) => {
     console.log('Received web3 request:', req.url);
     const url = new URL(req.url);
     let contractAddress = url.hostname;
