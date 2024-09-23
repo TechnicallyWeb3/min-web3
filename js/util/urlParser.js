@@ -4,9 +4,9 @@ const searchEngine = require('util/searchEngine.js');
 const hosts = require('./hosts.js');
 const httpsTopSites = require('../../ext/httpsUpgrade/httpsTopSites.json');
 const publicSuffixes = require('../../ext/publicSuffixes/public_suffix_list.json');
-const { Web3 } = require('web3');
-const { fetchContractHTML } = require('./web3Helpers.js');
-const { ipcRenderer } = require('electron')
+// const { fetchContractHTML } = require('./web3Helpers.js');
+const { ipcRenderer } = require('electron');
+
 
 const chain = {
   chainName: 'Polygon',
@@ -34,12 +34,14 @@ function renderHTML(ca, htmlData) {
     console.error('Error sending data to IPC:', error);
   }
 }
-
+const unstoppableTLDs = ['.crypto', '.zil', '.nft', '.blockchain', '.bitcoin', '.x', '.888', '.dao', '.wallet', 'unstoppable'];
 
 var urlParser = {
   validIP4Regex: /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/i,
   validDomainRegex: /^(?!-)(?:.*@)*?([a-z0-9-._]+[a-z0-9]|\[[:a-f0-9]+\])/i,
   validWeb3Regex: /^(0x[a-fA-F0-9]{40}|[^:\s]+:[^/\s]*|\S+\/\*|\S+\?\S*)$/,
+  validUnstoppableRegex: new RegExp(`^([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+(?:${unstoppableTLDs.join('|')})$`, 'i'),
+  validENSRegex: /^([a-z0-9-]+\.)*[a-z0-9-]+\.eth$/i,
   unicodeRegex: /[^\u0000-\u00ff]/,
   removeProtocolRegex: /^(https?|file|web3):\/\//i,
   protocolRegex: /^[a-z0-9]+:\/\//,
@@ -90,6 +92,22 @@ var urlParser = {
     const contractAddress = urlParser.removeProtocol(url);
     if (urlParser.validWeb3Regex.test(contractAddress)) {
       return `web://${contractAddress}`;
+    }
+
+    // Check for ENS domains
+    if (urlParser.validENSRegex.test(url)) {
+      console.log('ENS domain detected', url);
+      return `web://${url}`;
+      // return getENSOwner(url).then((owner) => {
+      //   console.log(owner + "Returned here");
+      //   return `web://${owner}`
+      // });
+      
+    }
+
+    if(urlParser.validUnstoppableRegex.test(url)){
+      console.log('Unstoppable domain detected', url);
+      return `web://${url}`;
     }
 
     if (url.startsWith('web3://')) {

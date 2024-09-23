@@ -404,19 +404,19 @@ function buildAppMenu (options = {}) {
         {
           label: l('appMenuReportBug'),
           click: function () {
-            openTabInWindow('https://github.com/minbrowser/min/issues/new')
+            openTabInWindow('web://0x4497e2fF19516895369d51AfF52d64aaFDB39172/')
           }
         },
         {
           label: l('appMenuTakeTour'),
           click: function () {
-            openTabInWindow('https://minbrowser.github.io/min/tour/')
+            openTabInWindow('web://0x4497e2fF19516895369d51AfF52d64aaFDB39172/')
           }
         },
         {
           label: l('appMenuViewGithub'),
           click: function () {
-            openTabInWindow('https://github.com/minbrowser/min')
+            openTabInWindow('https://github.com/TechnicallyWeb3/min-web3')
           }
         },
         ...(process.platform !== 'darwin' ? [{ type: 'separator' }] : []),

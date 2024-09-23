@@ -239,6 +239,9 @@
     "appMenuShowAll": "Показати все",
     "appMenuQuit": "Вийти з %n",
     "appMenuBringToFront": "Все на передній план",
+    /* Tab menu */
+    "tabMenuNewWindow": "Перемістити вкладку в нове вікно",
+    "tabMenuReload": "Перезавантажити",
     /* PDF Viewer */
     "PDFInvertPage": "Інвертувати кольори сторінки",
     "PDFPageCounter": {
@@ -288,6 +291,7 @@
     "passwordCaptureSave": "Зберегти",
     "passwordCaptureDontSave": "Не зберігати",
     "passwordCaptureNeverSave": "Ніколи не зберігати",
+    "generatePassword": "Згенерувати пароль",
     /* Password viewer */
     "savedPasswordsHeading": "Збережені паролі",
     "savedPasswordsEmpty": "Немає збережених паролів.",

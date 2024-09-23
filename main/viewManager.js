@@ -1,5 +1,5 @@
 const BrowserView = electron.BrowserView
-const { Web3 } = require('web3'); // Correct import statement
+// const { Web3 } = require('web3'); // Correct import statement
 
 // Chain configuration
 const chain = {
@@ -509,6 +509,24 @@ ipc.on('callViewMethod', function (e, data) {
     })
   } else if (data.callId) {
     e.sender.send('async-call-result', { callId: data.callId, error, result })
+  }
+})
+
+ipc.handle('getNavigationHistory', function (e, id) {
+  if (!viewMap[id]?.webContents) {
+    return null
+  }
+  const entries = []
+  const activeIndex = viewMap[id].webContents.navigationHistory.getActiveIndex()
+  const size = viewMap[id].webContents.navigationHistory.length()
+
+  for (let i = 0; i < size; i++) {
+    entries.push(viewMap[id].webContents.navigationHistory.getEntryAtIndex(i))
+  }
+
+  return {
+    activeIndex,
+    entries
   }
 })
 

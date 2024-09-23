@@ -231,6 +231,9 @@
         "appMenuShowAll": "Hiển thị tất cả",
         "appMenuQuit": "Thoát %n",
         "appMenuBringToFront": "Đưa tất cả trên trước",
+        /* Tab menu */
+        "tabMenuNewWindow": null, // missing translation
+        "tabMenuReload": null, // missing translation
         /* PDF Viewer */
         "PDFInvertPage": null, //missing translation
     "PDFPageCounter": {
@@ -280,7 +283,8 @@
         "passwordCaptureSave": "Lưu mật khẩu",
         "passwordCaptureDontSave": "Không lưu",
         "passwordCaptureNeverSave": "Không bao giờ lưu mật khẩu",
-        /* Password viewer */
+        "generatePassword": null, // missing translation
+    /* Password viewer */
         "savedPasswordsHeading": "Mật khẩu đã lưu",
         "savedPasswordsEmpty": "Không có mật khẩu lưu trước",
         "savedPasswordsNeverSavedLabel": "Không bao giờ",

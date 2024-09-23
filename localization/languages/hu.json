@@ -234,6 +234,9 @@
     "appMenuShowAll": "Mindent mutat",
     "appMenuQuit": "Kilépés %n",
     "appMenuBringToFront": "Mindent előtérbe hoz",
+    /* Tab menu */
+    "tabMenuNewWindow": null, // missing translation
+    "tabMenuReload": null, // missing translation
     /* PDF Viewer */
     "PDFInvertPage": null, //missing translation
     "PDFPageCounter": {
@@ -279,6 +282,7 @@
     "passwordCaptureSave": null, //missing translation
     "passwordCaptureDontSave": null, //missing translation
     "passwordCaptureNeverSave": null, //missing translation
+    "generatePassword": null, // missing translation
     /* Password viewer */
     "savedPasswordsHeading": null, //missing translation
     "savedPasswordsEmpty": null, //missing translation

@@ -23,28 +23,6 @@ crashReporter.start({
   compress: true
 })
 
-ipc.on('loadHTMLInView', (event, {ca,htmlData}) => {
-  console.log('HTML data received in main process:', htmlData);
-  try {
-    // console.log(html);
-    // Perform actions with htmlData, like sending it back to a specific webview
-    event.sender.send('renderHTMLInView', {ca,htmlData});
-  } catch (error) {
-    console.error('Error parsing HTML data:', error);
-  }
-});
-
-ipc.on('htmlLoaded', (event, tabId) => {
-  console.log("HTML LOADED IN MAIN", tabId);
-  const win = BrowserWindow.getAllWindows()[0]; // Assuming you're using a single window
-  if (win) {
-    console.log("Sending focusWebview event to window", win.id);
-    event.sender.send('focusWebview', tabId);
-    win.webContents.send('focusWebview', tabId);
-  } else {
-    console.error("No window found");
-  }
-});
 
 // Add this near the other IPC handlers
 ipc.on('testIPCConnection', (event) => {
@@ -187,8 +165,7 @@ function handleCommandLineArguments (argv) {
   }
 }
 
-function createWindow () {
-  console.log(`main:createWindow`)
+function createWindow (customArgs = {}) {
   var bounds;
 
   try {
@@ -220,10 +197,10 @@ function createWindow () {
     maximized: bounds.maximized
   }
 
-  return createWindowWithBounds(bounds)
+  return createWindowWithBounds(bounds, customArgs)
 }
 
-function createWindowWithBounds (bounds) {
+function createWindowWithBounds (bounds, customArgs) {
   const newWin = new BrowserWindow({
     width: bounds.width,
     height: bounds.height,
@@ -249,7 +226,8 @@ function createWindowWithBounds (bounds) {
         ...((isDevelopmentMode ? ['--development-mode'] : [])),
         '--window-id=' + windows.nextId,
         ...((windows.getAll().length === 0 ? ['--initial-window'] : [])),
-        ...(windows.hasEverCreatedWindow ? [] : ['--launch-window'])
+        ...(windows.hasEverCreatedWindow ? [] : ['--launch-window']),
+        ...(customArgs.initialTask ? ['--initial-task=' + customArgs.initialTask] : [])
       ]
     }
   })
@@ -374,7 +352,6 @@ app.on('ready', function () {
   }
 
   registerBundleProtocol(session.defaultSession)
-
 
   const newWin = createWindow()
 

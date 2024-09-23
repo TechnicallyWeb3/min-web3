@@ -238,6 +238,9 @@
     "appMenuShowAll": "عرض الكل",
     "appMenuQuit": "%n انهاء",
     "appMenuBringToFront": "جلب الكل الى المقدمة",
+    /* Tab menu */
+    "tabMenuNewWindow": null, // missing translation
+    "tabMenuReload": null, // missing translation
     /* PDF Viewer */
     "PDFInvertPage": null, //missing translation
     "PDFPageCounter": {
@@ -287,6 +290,7 @@
     "passwordCaptureSave": " حفظ",
     "passwordCaptureDontSave": "لا تحفظ",
     "passwordCaptureNeverSave": "لا تحفظ أبدا ",
+    "generatePassword": null, // missing translation
     /* Password viewer */
     "savedPasswordsHeading": "كلمات المرور المحفوظة",
     "savedPasswordsEmpty": "لا توجد كلمات مرور محفوظة",
