@@ -477,7 +477,7 @@ protocol.registerSchemesAsPrivileged([
     }
   },
   {
-    scheme: 'web3',
+    scheme: 'wttp',
     privileges: {
       standard: true,
       secure: true,
@@ -523,80 +523,70 @@ function registerBundleProtocol (ses) {
     return net.fetch(pathToFileURL(pathToServe).toString())
   })
 
-  ses.protocol.handle('web', async (req) => {
-    console.log('Received web3 request:', req.url);
-    const url = new URL(req.url);
-    let contractAddress = url.hostname;
-    const path = url.pathname || '/';
-    
-    console.log('Debug: Initial contract address or ENS:', contractAddress);
-
-    function isValidENS(domain) {
-      return /^([a-z0-9-]+\.)*[a-z0-9-]+\.eth$/i.test(domain);
-    }
-
-    function isValidUnstoppableDomain(domain) {
-
-      const unstoppableTLDs = ['.crypto', '.zil', '.nft', '.blockchain', '.bitcoin', '.x', '.888', '.dao', '.wallet','unstoppable'];
-      return unstoppableTLDs.some(tld => domain.endsWith(tld));
-    }
-
-    
-    try {
-      if (isValidENS(contractAddress)) {
-        console.log('Debug: ENS domain detected, resolving...');
-        const ensResult = await getENSOwner(contractAddress);
-        console.log(ensResult);
-        if(ensResult.status === 'resolved'){
-          contractAddress = ensResult.address;
-        }
-        // if (ensResult.status === 'website' || ensResult.status === 'owner') {
-        //   contractAddress = ensResult.address;
-        //   console.log('Debug: Resolved ENS to address:', contractAddress);
-        // } else {
-        //   throw new Error('Unable to resolve ENS domain');
-        // }
-      } 
-
-       else if (isValidUnstoppableDomain(contractAddress)) {
-        console.log('Debug: Unstoppable domain detected, resolving...');
-        const unstoppableResult = await resolveUnstoppableDomain(contractAddress);
-        if (unstoppableResult.status === 'resolved') {
-          console.log("WROKING");
-          contractAddress = unstoppableResult.address;
-          console.log('Debug: Resolved Unstoppable domain to address:', contractAddress);
-        } else {
-          throw new Error(`Unable to resolve Unstoppable domain: ${unstoppableResult.error || 'Unknown error'}`);
-        }
-      }
-
-    
-      
-      console.log('Debug: Final contract address:', contractAddress);
-      console.log('Debug: Path:', path);
-      
-      const resource = await fetchContractResource(contractAddress, path);
-      console.log('Debug: Resource:', resource.content);
-      console.log('Debug: Resource type:', resource.contentType);
-      
-      if (resource) {
-        return new Response(resource.content, {
-          status: 200,
-          headers: { 'content-type': resource.contentType }
-        });
-      } else {
-        return new Response('Resource not found', {
-          status: 404,
-          headers: { 'content-type': 'text/plain' }
-        });
-      }
-    } catch (error) {
-      console.error('Error processing request:', error);
-      return new Response(`Error: ${error.message}`, {
-        status: 500,
-        headers: { 'content-type': 'text/plain' }
-      });
-    }
+  ses.protocol.handle('wttp', async (req) => {
+	console.debug('wttp handler: Received request:', req.url);
+	const url = new URL(req.url);
+	let contractAddress = url.hostname;
+	const path = url.pathname || '/';
+	
+	console.debug('wttp handler: Initial contract address or ENS:', contractAddress);
+	console.debug('wttp handler: Path:', path);
+  
+	function isValidENS(domain) {
+	  return /^([a-z0-9-]+\.)*[a-z0-9-]+\.eth$/i.test(domain);
+	}
+  
+	function isValidUnstoppableDomain(domain) {
+	  const unstoppableTLDs = ['.crypto', '.zil', '.nft', '.blockchain', '.bitcoin', '.x', '.888', '.dao', '.wallet','unstoppable'];
+	  return unstoppableTLDs.some(tld => domain.endsWith(tld));
+	}
+  
+	try {
+	  if (isValidENS(contractAddress)) {
+		console.debug('wttp handler: ENS domain detected, resolving...');
+		const ensResult = await getENSOwner(contractAddress);
+		console.debug('wttp handler: ENS resolution result:', ensResult);
+		if(ensResult.status === 'resolved'){
+		  contractAddress = ensResult.address;
+		  console.debug('wttp handler: Resolved ENS to address:', contractAddress);
+		}
+	  } else if (isValidUnstoppableDomain(contractAddress)) {
+		console.debug('wttp handler: Unstoppable domain detected, resolving...');
+		const unstoppableResult = await resolveUnstoppableDomain(contractAddress);
+		console.debug('wttp handler: Unstoppable domain resolution result:', unstoppableResult);
+		if (unstoppableResult.status === 'resolved') {
+		  contractAddress = unstoppableResult.address;
+		  console.debug('wttp handler: Resolved Unstoppable domain to address:', contractAddress);
+		} else {
+		  throw new Error(`Unable to resolve Unstoppable domain: ${unstoppableResult.error || 'Unknown error'}`);
+		}
+	  }
+  
+	  console.debug('wttp handler: Final contract address:', contractAddress);
+	  console.debug('wttp handler: Fetching contract resource...');
+	  const resource = await fetchContractResource(contractAddress, path);
+	  console.debug('wttp handler: Fetched resource:', resource);
+  
+	  if (resource) {
+		console.debug('wttp handler: Returning resource with content type:', resource.contentType);
+		return new Response(resource.content, {
+		  status: 200,
+		  headers: { 'content-type': resource.contentType }
+		});
+	  } else {
+		console.debug('wttp handler: Resource not found');
+		return new Response('Resource not found', {
+		  status: 404,
+		  headers: { 'content-type': 'text/plain' }
+		});
+	  }
+	} catch (error) {
+	  console.error('wttp handler: Error processing request:', error);
+	  return new Response(`Error: ${error.message}`, {
+		status: 500,
+		headers: { 'content-type': 'text/plain' }
+	  });
+	}
   })
 }
 

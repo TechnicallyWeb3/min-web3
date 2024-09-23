@@ -43,7 +43,7 @@ var urlParser = {
   validUnstoppableRegex: new RegExp(`^([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+(?:${unstoppableTLDs.join('|')})$`, 'i'),
   validENSRegex: /^([a-z0-9-]+\.)*[a-z0-9-]+\.eth$/i,
   unicodeRegex: /[^\u0000-\u00ff]/,
-  removeProtocolRegex: /^(https?|file|web3):\/\//i,
+  removeProtocolRegex: /^(https?|file|wttp):\/\//i,
   protocolRegex: /^[a-z0-9]+:\/\//,
   isURL: function (url) {
     return urlParser.protocolRegex.test(url) || url.indexOf('about:') === 0 || url.indexOf('chrome:') === 0 || url.indexOf('data:') === 0;
@@ -71,68 +71,57 @@ var urlParser = {
     return !urlParser.protocolRegex.test(url);
   },
   parse:  function (url) {
-    url = url.trim(); // remove whitespace common on copy-pasted url's
-
+    console.debug('urlParser.parse: Starting to parse URL:', url);
+    url = url.trim();
+    
     if (!url) {
+      console.debug('urlParser.parse: Empty URL, returning about:blank');
       return 'about:blank';
     }
-
-    if (url.indexOf('view-source:') === 0) {
-      var realURL = url.replace('view-source:', '');
-      return 'view-source:' + urlParser.parse(realURL);
+    
+    if (url.startsWith('wttp://')) {
+      console.debug('urlParser.parse: URL already in wttp:// format:', url);
+      return url;
     }
-
-    if (url.startsWith('min:') && !url.startsWith('min://app/')) {
-      // convert shortened min:// urls to full ones
-      const urlChunks = url.split('?')[0].replace(/min:(\/\/)?/g, '').split('/');
-      const query = url.split('?')[1];
-      return 'min://app/pages/' + urlChunks[0] + (urlChunks[1] ? urlChunks.slice(1).join('/') : '/index.html') + (query ? '?' + query : '');
-    }
-
+    
     const contractAddress = urlParser.removeProtocol(url);
+    console.debug('urlParser.parse: Removed protocol, result:', contractAddress);
+    
     if (urlParser.validWeb3Regex.test(contractAddress)) {
-      return `web://${contractAddress}`;
+      console.debug('urlParser.parse: Valid Web3 address detected:', contractAddress);
+      return `wttp://${contractAddress}`;
     }
-
-    // Check for ENS domains
+    
     if (urlParser.validENSRegex.test(url)) {
-      console.log('ENS domain detected', url);
-      return `web://${url}`;
-      // return getENSOwner(url).then((owner) => {
-      //   console.log(owner + "Returned here");
-      //   return `web://${owner}`
-      // });
-      
+      console.debug('urlParser.parse: ENS domain detected:', url);
+      return `wttp://${url}`;
     }
-
+    
     if(urlParser.validUnstoppableRegex.test(url)){
-      console.log('Unstoppable domain detected', url);
-      return `web://${url}`;
+      console.debug('urlParser.parse: Unstoppable domain detected:', url);
+      return `wttp://${url}`;
     }
-
-    if (url.startsWith('web3://')) {
-      return 'web://' + url.slice(7)
-    }
-
+    
     if (urlParser.isURL(url)) {
       if (!urlParser.isInternalURL(url) && url.startsWith('http://')) {
         // prefer HTTPS over HTTP
         const noProtoURL = urlParser.removeProtocol(url);
-
+        
         if (urlParser.isHTTPSUpgreadable(noProtoURL)) {
           return 'https://' + noProtoURL;
         }
       }
       return url;
     }
-
+    
     if (urlParser.isURLMissingProtocol(url) && urlParser.validateDomain(urlParser.getDomain(url))) {
       if (urlParser.isHTTPSUpgreadable(url)) {
         return 'https://' + url;
       }
       return 'http://' + url;
     }
-
+    
+    console.debug('urlParser.parse: Final parsed URL:', url);
     return searchEngine.getCurrent().searchURL.replace('%s', encodeURIComponent(url));
   },
   basicURL: function (url) {
