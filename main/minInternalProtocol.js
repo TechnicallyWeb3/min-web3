@@ -578,6 +578,21 @@ function registerBundleProtocol (ses) {
       const resource = await fetchContractResource(contractAddress, path);
       console.log('Debug: Resource:', resource.content);
       console.log('Debug: Resource type:', resource.contentType);
+
+      if (resource.contentType === 'ipfs') {
+        const ipfsData = JSON.parse(resource.content);
+        console.log('Debug: IPFS link:', ipfsData.link);
+        console.log('Debug: IPFS content type:', ipfsData.type);
+
+        // Fetch the content from IPFS using a gateway
+        const ipfsResponse = await fetch(`${ipfsData.link}`);
+        const ipfsContent = await ipfsResponse.text();
+
+        return new Response(ipfsContent, {
+          status: 200,
+          headers: { 'content-type': ipfsData.type }
+        });
+      }
       
       if (resource) {
         return new Response(resource.content, {
