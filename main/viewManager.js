@@ -16,7 +16,7 @@ const localhost = {
 };
 
 
-const isTesting = true; // Set this to true when you want to use localhost
+const isTesting = false; // Set this to true when you want to use localhost
 
 if (isTesting) {
   chain.chainName = 'Localhost';
