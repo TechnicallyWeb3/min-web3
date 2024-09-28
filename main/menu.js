@@ -404,13 +404,13 @@ function buildAppMenu (options = {}) {
         {
           label: l('appMenuReportBug'),
           click: function () {
-            openTabInWindow('web://0x4497e2fF19516895369d51AfF52d64aaFDB39172/')
+            openTabInWindow('wttp://0x4497e2fF19516895369d51AfF52d64aaFDB39172/')
           }
         },
         {
           label: l('appMenuTakeTour'),
           click: function () {
-            openTabInWindow('web://0x4497e2fF19516895369d51AfF52d64aaFDB39172/')
+            openTabInWindow('wttp://0x4497e2fF19516895369d51AfF52d64aaFDB39172/')
           }
         },
         {

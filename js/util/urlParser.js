@@ -91,13 +91,13 @@ var urlParser = {
 
     const contractAddress = urlParser.removeProtocol(url);
     if (urlParser.validWeb3Regex.test(contractAddress)) {
-      return `web://${contractAddress}`;
+      return `wttp://${contractAddress}`;
     }
 
     // Check for ENS domains
     if (urlParser.validENSRegex.test(url)) {
       console.log('ENS domain detected', url);
-      return `web://${url}`;
+      return `wttp://${url}`;
       // return getENSOwner(url).then((owner) => {
       //   console.log(owner + "Returned here");
       //   return `web://${owner}`
@@ -107,11 +107,11 @@ var urlParser = {
 
     if(urlParser.validUnstoppableRegex.test(url)){
       console.log('Unstoppable domain detected', url);
-      return `web://${url}`;
+      return `wttp://${url}`;
     }
 
-    if (url.startsWith('web3://')) {
-      return 'web://' + url.slice(7)
+    if (url.startsWith('wttp://')) {
+      return 'wttp://' + url.slice(7)
     }
 
     if (urlParser.isURL(url)) {

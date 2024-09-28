@@ -82,7 +82,7 @@ const sessionRestore = {
         tasks.setSelected(tasks.add()) // create a new task
 
         var newTab = tasks.getSelected().tabs.add({
-            url: 'web://0x4497e2fF19516895369d51AfF52d64aaFDB39172'
+            url: 'wttp://0x4497e2fF19516895369d51AfF52d64aaFDB39172'
         })
         browserUI.addTab(newTab, {
          enterEditMode: false
