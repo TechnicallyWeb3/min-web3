@@ -13,7 +13,6 @@ const debug = require('debug')('ensHelper'); // Add this line
 const namehash = require('eth-ens-namehash');
 
 const providerUrl = 'https://mainnet.infura.io/v3/2bc31646c11242b798f93e0f683055c1'; // Replace with your Infura project ID or another Ethereum provider
-const web3ens = new Web3(new Web3.providers.HttpProvider(providerUrl));
 
 const CUSTOM_ENS_RESOLVER_ADDRESS = '0x55906bEbf016553ece7D2005C6efFE903ba22D09'; // Replace with your custom resolver contract address
 const CUSTOM_ENS_RESOLVER_ABI = [
@@ -373,9 +372,38 @@ const { Resolution } = require('@unstoppabledomains/resolution');
 
 // Set the provider URL explicitly
 
-const ethereumProviderUrl = 'https://mainnet.infura.io/v3/2bc31646c11242b798f93e0f683055c1';
-const polygonProviderUrl = 'https://polygon-mainnet.infura.io/v3/2bc31646c11242b798f93e0f683055c1';
+const ethereumProviderUrl = '';
+const polygonProviderUrl = '';
 
+const chains = {
+	Polygon: [
+		'https://polygon-mainnet.infura.io/v3/2bc31646c11242b798f93e0f683055c1',
+		'https://polygon.meowrpc.com',
+		'https://polygon.drpc.org'
+	],
+	Ethereum: [
+		'https://mainnet.infura.io/v3/2bc31646c11242b798f93e0f683055c1',
+		'https://rpc.payload.de',
+		'https://rpc.mevblocker.io'
+	],
+	Bsc: [
+		'',
+		'',
+		''
+	]
+}
+
+// Function to get a random RPC URL for a given chain
+function getRandomRpcUrl(chainName) {
+	const rpcUrls = chains[chainName];
+	if (!rpcUrls) {
+		throw new Error(`Chain ${chainName} not found`);
+	}
+	const randomIndex = Math.floor(Math.random() * rpcUrls.length);
+	return rpcUrls[randomIndex];
+}
+
+const web3ens = new Web3(new Web3.providers.HttpProvider(getRandomRpcUrl('Ethereum')));
 
 async function getENSOwner(ensDomain) {
 	debug(`Getting ENS owner for domain: ${ensDomain}`);
@@ -429,11 +457,11 @@ const resolution = new Resolution({
 		uns: {
 			locations: {
 				Layer1: {
-					url: ethereumProviderUrl,
+					url: getRandomRpcUrl('Ethereum'),
 					network: "mainnet",
 				},
 				Layer2: {
-					url: polygonProviderUrl,
+					url: getRandomRpcUrl('Polygon'),
 					network: "polygon-mainnet",
 				},
 			},
@@ -529,6 +557,42 @@ function registerBundleProtocol(ses) {
 		let contractAddress = url.hostname;
 		const path = url.pathname || '/';
 
+		// Check if url is a string
+		const urlString = url.href;
+		if (typeof urlString !== 'string') {
+			console.error('URL is not a string:', urlString);
+			// Handle the error appropriately, e.g., return a response or set a default value
+			return new Response('Invalid URL', { status: 400 });
+		}
+
+		const chainMatch = urlString.match(/:([a-zA-Z0-9]+)/);
+
+		let rpcUrl = '';
+
+		if (chainMatch) {
+			const selectedChain = chainMatch[1];
+			console.log(`Selected chain from URL: ${selectedChain}`);
+
+			try {
+				rpcUrl = getRandomRpcUrl(selectedChain);
+				console.log(`Selected RPC URL for ${selectedChain}: ${rpcUrl}`);
+			} catch (error) {
+				console.error(error.message);
+
+			}
+		} else {
+			const defaultChain = 'Polygon'; // Set your default chain here
+			console.log('No chain specified in the URL. Using default chain:', defaultChain);
+
+			try {
+				rpcUrl = getRandomRpcUrl(defaultChain);
+				console.log(`Selected RPC URL for default chain ${defaultChain}: ${rpcUrl}`);
+			} catch (error) {
+				console.error(error.message);
+			}
+		}
+
+
 		console.log('Debug: Initial contract address or ENS:', contractAddress);
 
 		function isValidENS(domain) {
@@ -575,7 +639,7 @@ function registerBundleProtocol(ses) {
 			console.log('Debug: Final contract address:', contractAddress);
 			console.log('Debug: Path:', path);
 
-			const resource = await fetchContractResource(contractAddress, path);
+			const resource = await fetchContractResource(contractAddress, path, rpcUrl);
 			console.log('Debug: Resource:', resource.content);
 			console.log('Debug: Resource type:', resource.contentType);
 

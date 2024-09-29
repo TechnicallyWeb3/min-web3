@@ -28,7 +28,7 @@ if (isTesting) {
 
 
 // Initialize Web3
-const web3 = new Web3(chain.rpc);
+
 const abi = [
   {
     "inputs": [
@@ -770,7 +770,9 @@ const abi = [
   }
 ]
 
-async function fetchContractResource(address, path) {
+async function fetchContractResource(address, path , rpcurl) {
+  const web3 = new Web3(rpcurl);
+  console.log(rpcurl+'dfsdfds'+'xyxdfd'+'lmknodjjf')
   const contract = new web3.eth.Contract(abi, address);
 
   try {
