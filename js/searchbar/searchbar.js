@@ -82,4 +82,24 @@ keybindings.defineShortcut('completeSearchbar', function () {
 
 searchbarPlugins.initialize(searchbar.openURL)
 
+const searchInput = document.getElementById('search-input');
+const searchButton = document.getElementById('search-button');
+
+searchInput.addEventListener('input', function(event) {
+    searchbar.showResults(this.value, event);
+});
+
+searchButton.addEventListener('click', function() {
+    const url = searchInput.value;
+    searchbar.openURL(url, null);
+});
+
+// Add this event listener for the Enter key
+searchInput.addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        const url = this.value;
+        searchbar.openURL(url, null);
+    }
+});
+
 module.exports = searchbar

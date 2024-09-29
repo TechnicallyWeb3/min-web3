@@ -1,0 +1,58 @@
+#doodle {
+    display: block;
+    margin: 35px auto; /* Reduce top margin to bring the doodle closer to the title */
+    width: 125px; /* Set width to 200px */
+    height: 125px; /* Set height to 200px */
+}
+
+.text-center {
+    text-align: center; /* Center the text */
+    margin: 20px 0; /* Add some margin above and below */
+}
+
+.text-center h1 {
+    font-size: 32px; /* Adjust font size for the title */
+    font-weight: bold;
+    margin: 0; /* Remove default margin */
+    color: #8c6bb1; /* Title color */
+}
+
+.powered-by {
+    font-size: 24px; /* Adjust font size for the subtitle */
+    font-weight: bold;
+    margin: 3px 0; /* Reduce margin to bring it closer to the doodle */
+    color: #8c6bb1; /* Fallback color for visibility */
+    display: inline-block; /* Ensure it behaves like a block for centering */
+}
+
+.text-center h2 {
+    font-size: 18px; /* Adjust font size for the subtitle */
+    margin: 0; /* Remove default margin */
+}
+
+#search-container {
+    margin-top: 10px; /* Space above the search field */
+    display: flex; /* Align input and button in a row */
+    justify-content: center; /* Center the search field */
+}
+
+.searchbar-input {
+    width: 300px; /* Width of the input field */
+    padding: 10px; /* Padding inside the input */
+    border: 1px solid #ccc; /* Border style */
+    border-radius: 4px; /* Rounded corners */
+}
+
+.searchbar-button {
+    padding: 10px 15px; /* Padding for the button */
+    margin-left: 5px; /* Space between input and button */
+    background-color: #f7931a; /* Button background color */
+    color: white; /* Button text color */
+    border: none; /* Remove border */
+    border-radius: 4px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+
+.searchbar-button:hover {
+    background-color: #7a5a9e; /* Darker shade on hover */
+}

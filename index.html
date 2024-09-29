@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="dist/bundle.css" />
     <link rel="stylesheet" href="ext/icons/iconfont.css" />
     <link rel="stylesheet" href="css/nav.css" />
+    <link rel="stylesheet" href="css/home.css" />
   </head>
 
   <body>
@@ -190,9 +191,20 @@
       </svg>
     </button>
 
-    <div id="searchbar" class="theme-background-color theme-text-color">
-      <div class="top-answer-area"></div>
+    <div class="text-center">
+      <h1>TW3 Browser</h1> <!-- Title above the doodle -->
+      <img src="/assets/tw3.png" alt="Doodle" id="doodle"> <!-- Doodle Image -->
+      <h2 class="powered-by">Powered by Min Browser</h2> <!-- Subtitle below the doodle -->
     </div>
+
+        <!-- Search Field -->
+        <div id="search-container">
+          <input type="text" id="search-input" placeholder="Search or enter URL" class="searchbar-input" />
+          <button id="search-button" class="searchbar-button">Search</button>
+      </div>
+      <div id="searchbar" class="theme-background-color theme-text-color">
+          <div class="top-answer-area"></div>
+      </div>
 
     <div id="overlay"></div>
 
