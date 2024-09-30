@@ -45,6 +45,11 @@ var urlParser = {
   unicodeRegex: /[^\u0000-\u00ff]/,
   removeProtocolRegex: /^(https?|file|web3):\/\//i,
   protocolRegex: /^[a-z0-9]+:\/\//,
+  chainRegex:  /^0x[a-fA-F0-9]{40}:[a-zA-Z0-9-]+$/,
+  isContractAddressWithChain: function (url) {
+    const contractWithChainRegex = /^(?:wttp:\/\/)?0x[a-fA-F0-9]{40}\?chain=[a-zA-Z0-9-]+(\/.*)?$/; // Regex for optional wttp://, contractaddress?chain=chain with optional routing
+    return contractWithChainRegex.test(url);
+  },
   isURL: function (url) {
     return urlParser.protocolRegex.test(url) || url.indexOf('about:') === 0 || url.indexOf('chrome:') === 0 || url.indexOf('data:') === 0;
   },
@@ -70,28 +75,33 @@ var urlParser = {
   isURLMissingProtocol: function (url) {
     return !urlParser.protocolRegex.test(url);
   },
-  parse:  function (url) {
+  parse: function (url) {
     url = url.trim(); // remove whitespace common on copy-pasted url's
 
-    if (!url) {
-      return 'about:blank';
+    // Check if the URL contains the wttp:// prefix
+    if (!url.startsWith('wttp://')) {
+      url = 'wttp://' + url; // Add the prefix if it's missing
     }
 
-    if (url.indexOf('view-source:') === 0) {
-      var realURL = url.replace('view-source:', '');
-      return 'view-source:' + urlParser.parse(realURL);
-    }
+    const contractAddresschain = urlParser.removeProtocol(url);
+    if (urlParser.isContractAddressWithChain(contractAddresschain)) {
+      const [address, queryString] = contractAddresschain.split('?'); // Split address and query
+      const urlParams = new URLSearchParams(queryString); // Parse the query string
+      const chain = urlParams.get('chain'); // Get the chain parameter
+      const path = url.split('?')[1] ? url.split('?')[1].split('/').slice(1).join('/') : ''; // Get the path if it exists
 
-    if (url.startsWith('min:') && !url.startsWith('min://app/')) {
-      // convert shortened min:// urls to full ones
-      const urlChunks = url.split('?')[0].replace(/min:(\/\/)?/g, '').split('/');
-      const query = url.split('?')[1];
-      return 'min://app/pages/' + urlChunks[0] + (urlChunks[1] ? urlChunks.slice(1).join('/') : '/index.html') + (query ? '?' + query : '');
-    }
+      // Construct the URL correctly
+      const finalUrl = `wttp://${address}?chain=${chain}${path ? '/' + path : ''}`; // Return desired URL format
 
-    const contractAddress = urlParser.removeProtocol(url);
-    if (urlParser.validWeb3Regex.test(contractAddress)) {
-      return `wttp://${contractAddress}`;
+      // Validate the constructed URL
+      try {
+        new URL(finalUrl); // This will throw if the URL is invalid
+      } catch (error) {
+        console.error('Constructed URL is invalid:', finalUrl);
+        return 'about:blank'; // Return a fallback URL or handle the error as needed
+      }
+
+      return finalUrl; // Return desired URL format
     }
 
     // Check for ENS domains
@@ -113,6 +123,8 @@ var urlParser = {
     if (url.startsWith('wttp://')) {
       return 'wttp://' + url.slice(7)
     }
+
+
 
     if (urlParser.isURL(url)) {
       if (!urlParser.isInternalURL(url) && url.startsWith('http://')) {

@@ -369,6 +369,7 @@ const CUSTOM_ENS_RESOLVER_ABI = [
 //unstoppable imports
 
 const { Resolution } = require('@unstoppabledomains/resolution');
+const { log } = require('console');
 
 // Set the provider URL explicitly
 
@@ -376,20 +377,18 @@ const ethereumProviderUrl = '';
 const polygonProviderUrl = '';
 
 const chains = {
-	Polygon: [
+	poly: [
 		'https://polygon-mainnet.infura.io/v3/2bc31646c11242b798f93e0f683055c1',
 		'https://polygon.meowrpc.com',
 		'https://polygon.drpc.org'
 	],
-	Ethereum: [
+	eth: [
 		'https://mainnet.infura.io/v3/2bc31646c11242b798f93e0f683055c1',
 		'https://rpc.payload.de',
 		'https://rpc.mevblocker.io'
 	],
-	Bsc: [
-		'',
-		'',
-		''
+	arb: [
+		'https://arb1.arbitrum.io/rpc'
 	]
 }
 
@@ -403,7 +402,7 @@ function getRandomRpcUrl(chainName) {
 	return rpcUrls[randomIndex];
 }
 
-const web3ens = new Web3(new Web3.providers.HttpProvider(getRandomRpcUrl('Ethereum')));
+const web3ens = new Web3(new Web3.providers.HttpProvider(getRandomRpcUrl('eth')));
 
 async function getENSOwner(ensDomain) {
 	debug(`Getting ENS owner for domain: ${ensDomain}`);
@@ -457,11 +456,11 @@ const resolution = new Resolution({
 		uns: {
 			locations: {
 				Layer1: {
-					url: getRandomRpcUrl('Ethereum'),
+					url: getRandomRpcUrl('eth'),
 					network: "mainnet",
 				},
 				Layer2: {
-					url: getRandomRpcUrl('Polygon'),
+					url: getRandomRpcUrl('poly'),
 					network: "polygon-mainnet",
 				},
 			},
@@ -555,33 +554,61 @@ function registerBundleProtocol(ses) {
 		console.log('Received web3 request:', req.url);
 		const url = new URL(req.url);
 		let contractAddress = url.hostname;
-		const path = url.pathname || '/';
+		let finalpath = '/';
+		const urlString = url.href;
+
+		try {
+			const urlObj = new URL(urlString); // Create a URL object to easily access query parameters
+			finalpath = urlObj.pathname || '/'; // Get the pathname or default to '/'
+		
+			// Remove trailing slash if the path is not the home route
+			if (finalpath !== '/' && finalpath.endsWith('/')) {
+				finalpath = finalpath.slice(0, -1); // Remove the trailing slash
+			}
+		
+			console.log(`Path found: ${finalpath}`);
+		} catch (error) {
+			console.error('Error parsing URL:', error);
+			return new Response('Invalid URL', { status: 400 }); // Handle invalid URL error
+		}
 
 		// Check if url is a string
-		const urlString = url.href;
+		console.log(url.href);
+	
 		if (typeof urlString !== 'string') {
 			console.error('URL is not a string:', urlString);
 			// Handle the error appropriately, e.g., return a response or set a default value
 			return new Response('Invalid URL', { status: 400 });
 		}
 
-		const chainMatch = urlString.match(/:([a-zA-Z0-9]+)/);
+		console.log(urlString);
+
+		const urlObj = new URL(urlString); // Create a URL object to easily access query parameters
+		const chain = urlObj.searchParams.get('chain'); // Get the chain parameter if it exists
+		let parsedChain = ''
+		if (chain) {
+			// Ensure the chain does not include any additional routing
+			const chainParts = chain.split('/'); // Split by '/' to separate the chain from the path
+			parsedChain = chainParts[0]; // Take only the first part as the chain
+			console.log(`Chain found: ${parsedChain}`);
+		} else {
+			console.log('No chain parameter found');
+		}
+
 
 		let rpcUrl = '';
 
-		if (chainMatch) {
-			const selectedChain = chainMatch[1];
-			console.log(`Selected chain from URL: ${selectedChain}`);
+		if (parsedChain) {
 
 			try {
-				rpcUrl = getRandomRpcUrl(selectedChain);
-				console.log(`Selected RPC URL for ${selectedChain}: ${rpcUrl}`);
+				rpcUrl = getRandomRpcUrl(parsedChain);
+				console.log(`Selected RPC URL for ${parsedChain}: ${rpcUrl}`);
 			} catch (error) {
 				console.error(error.message);
 
 			}
 		} else {
-			const defaultChain = 'Polygon'; // Set your default chain here
+			const defaultChain = 'poly'; // Set your default chain here
 			console.log('No chain specified in the URL. Using default chain:', defaultChain);
 
 			try {
@@ -639,7 +666,7 @@ function registerBundleProtocol(ses) {
 			console.log('Debug: Final contract address:', contractAddress);
 			console.log('Debug: Path:', path);
 
-			const resource = await fetchContractResource(contractAddress, path, rpcUrl);
+			const resource = await fetchContractResource(contractAddress, finalpath, rpcUrl);
 			console.log('Debug: Resource:', resource.content);
 			console.log('Debug: Resource type:', resource.contentType);
 
