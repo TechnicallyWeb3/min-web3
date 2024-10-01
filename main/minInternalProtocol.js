@@ -560,7 +560,7 @@ function registerBundleProtocol(ses) {
 		try {
 			const urlObj = new URL(urlString); // Create a URL object to easily access query parameters
 			finalpath = urlObj.pathname || '/'; // Get the pathname or default to '/'
-		
+			console.log(finalpath);
 			// Remove trailing slash if the path is not the home route
 			if (finalpath !== '/' && finalpath.endsWith('/')) {
 				finalpath = finalpath.slice(0, -1); // Remove the trailing slash
@@ -664,8 +664,9 @@ function registerBundleProtocol(ses) {
 
 
 			console.log('Debug: Final contract address:', contractAddress);
-			console.log('Debug: Path:', path);
-
+			console.log('Debug: Path:', finalpath);
+			console.log('Debug: ',contractAddress)
+			console.log('Debug: ',rpcUrl)
 			const resource = await fetchContractResource(contractAddress, finalpath, rpcUrl);
 			console.log('Debug: Resource:', resource.content);
 			console.log('Debug: Resource type:', resource.contentType);
