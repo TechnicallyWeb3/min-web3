@@ -35,7 +35,7 @@ async function fetchContractResource(address, path) {
           console.log(`Fetching chunk ${i + 1} of ${totalChunks} for path: ${path}`);
           const result = await contract.methods.getResourceChunk(path, i).call();        
 
-          console.log(result);
+          // console.log(result);
 
           function hexToUtf8(hex) {
             // Ensure hex is a string
@@ -56,12 +56,12 @@ async function fetchContractResource(address, path) {
           
           const hexString = result[0]; // Example hex string (hello world)
           const utf8String = hexToUtf8(hexString);
-          console.log(utf8String); // Output: hello world
+          // console.log(utf8String); // Output: hello world
           
           
           content += utf8String; // Append the chunk
           
-          console.log(`Fetched chunk ${i + 1}:`, result[0]);
+          // console.log(`Fetched chunk ${i + 1}:`, result[0]);
       }
 
       console.log(`Completed fetching resource for path: ${path}`);

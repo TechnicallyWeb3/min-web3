@@ -576,7 +576,7 @@ function registerBundleProtocol(ses) {
 			console.log('Debug: Path:', path);
 
 			const resource = await fetchContractResource(contractAddress, path);
-			console.log('Debug: Resource:', resource.content);
+			// console.log('Debug: Resource:', resource.content);
 			console.log('Debug: Resource type:', resource.contentType);
 
 			if (resource.contentType === 'ipfs') {
