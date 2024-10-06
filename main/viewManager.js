@@ -1,14 +1,4 @@
 const BrowserView = electron.BrowserView
-// const { Web3 } = require('web3'); // Correct import statement
-
-// Chain configuration
-const chain = {
-  chainName: 'Polygon',
-  chainSymbol: 'MATIC',
-  chainId: 137,
-  rpc: 'https://polygon-bor-rpc.publicnode.com',
-  explorerPrefix: 'https://polygonscan.com/address/'
-};
 
 const localhost = {
   url: "http://127.0.0.1:8545",  // Default local Hardhat network URL
@@ -25,74 +15,6 @@ if (isTesting) {
   chain.rpc = localhost.url;
   chain.explorerPrefix = ''; // No explorer for localhost
 }
-
-
-// Import the ABI from the JSON file
-const { abi } = require('../web3/WebsiteContract.json');
-
-// Initialize Web3
-const web3 = new Web3(chain.rpc);
-const contract = new web3.eth.Contract(abi, address);
-
-async function fetchContractResource(address, path) {
-  const contract = new web3.eth.Contract(abi, address);
-
-  try {
-      console.log(`Fetching total chunks for path: ${path}`);
-      const resourceInfo = await contract.methods.getResource(path.toString()).call();
-      const totalChunks = resourceInfo[0];
-      console.log(`Total chunks to fetch: ${totalChunks}`);
-
-
-
-      let content = "";
-      let contentType = "";
-
-      for (let i = 0; i < totalChunks[0]; i++) {
-          console.log(`Fetching chunk ${i + 1} of ${totalChunks} for path: ${path}`);
-          const result = await contract.methods.getResourceChunk(path, i).call();        
-
-          console.log(result);
-
-          function hexToUtf8(hex) {
-            // Ensure hex is a string
-            if (typeof hex !== 'string') {
-                throw new TypeError('Expected a string');
-            }
-            
-            // Remove the "0x" prefix if present
-            hex = hex.startsWith('0x') ? hex.slice(2) : hex;
-
-            // Convert the hex string into bytes (Uint8Array)
-            const bytes = new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-
-            // Decode bytes into a UTF-8 string
-            const decoder = new TextDecoder();
-            return decoder.decode(bytes);
-        }
-          
-          const hexString = result[0]; // Example hex string (hello world)
-          const utf8String = hexToUtf8(hexString);
-          console.log(utf8String); // Output: hello world
-          
-          
-          content += utf8String; // Append the chunk
-          contentType = result[1]; // Keep content type consistent
-          
-          console.log(`Fetched chunk ${i + 1}:`, result[0]);
-      }
-
-      console.log(`Completed fetching resource for path: ${path}`);
-      console.log(`Content type: ${contentType}`);
-      return { content, contentType };
-  } catch (error) {
-      console.error('Error fetching resource chunks:', error);
-      return null;
-  }
-}
-
-
-
 
 var viewMap = {} // id: view
 var viewStateMap = {} // id: view state

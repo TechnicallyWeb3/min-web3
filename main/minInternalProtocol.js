@@ -1,7 +1,7 @@
 const { pathToFileURL } = require('url')
 // const { getENSOwner } = require(path.join(__dirname, '..','min-web3', 'main', 'ensHelper'));
 // const { resolveUnstoppableDomain } = require(path.join(__dirname, '..','min-web3', 'main', 'unstoppableHelper'));
-
+const { fetchContractResource } = require(path.join(__dirname, '..','min-web3', 'main','web3Helpers'));
 
 
 
