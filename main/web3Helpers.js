@@ -18,7 +18,7 @@ async function fetchContractResource(address, path) {
       constant: true,
       inputs: [{ name: "path", type: "string" }],
       name: "getResource",
-      outputs: [{ name: "content", type: "string" }, { name: "contentType", type: "string" }],
+      outputs: [{ name: "content", type: "bytes" }, { name: "contentType", type: "string" }],
       type: "function",
     }
   ], address);
