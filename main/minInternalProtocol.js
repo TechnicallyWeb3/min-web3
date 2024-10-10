@@ -673,6 +673,13 @@ function registerBundleProtocol(ses) {
 
 			if (resource.contentType === 'ipfs') {
 				const ipfsData = JSON.parse(resource.content);
+
+				  // Ensure the IPFS link starts with 'https://'
+				  if (!ipfsData.link.startsWith('https://')) {
+					ipfsData.link = `https://${ipfsData.link}`;
+					console.log('Debug: IPFS link modified to include https://');
+				}
+				
 				console.log('Debug: IPFS link:', ipfsData.link);
 				console.log('Debug: IPFS content type:', ipfsData.type);
 
