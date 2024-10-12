@@ -80,7 +80,7 @@ var urlParser = {
 
     // Check if the URL contains the wttp:// prefix
     if (!url.startsWith('wttp://')) {
-      url = 'wttp://' + url; // Add the prefix if it's missing
+      url = 'wttp://' + url+'/'; // Add the prefix if it's missing
     }
 
     const contractAddresschain = urlParser.removeProtocol(url);
