@@ -2,7 +2,7 @@ const { pathToFileURL } = require('url')
 // const { getENSOwner } = require(path.join(__dirname, '..','min-web3', 'main', 'ensHelper'));
 // const { resolveUnstoppableDomain } = require(path.join(__dirname, '..','min-web3', 'main', 'unstoppableHelper'));
 
-
+const { wttp } = require('wttp-handler');
 
 
 
@@ -370,6 +370,7 @@ const CUSTOM_ENS_RESOLVER_ABI = [
 //unstoppable imports
 
 const { Resolution } = require('@unstoppabledomains/resolution');
+const { log } = require('util');
 
 // Set the provider URL explicitly
 
@@ -575,38 +576,55 @@ function registerBundleProtocol(ses) {
 			console.log('Debug: Final contract address:', contractAddress);
 			console.log('Debug: Path:', path);
 
-			const resource = await fetchContractResource(contractAddress, path);
-			console.log('Debug: Resource:', resource.content);
-			console.log('Debug: Resource type:', resource.contentType);
+			let content = "";
 
-			if (resource.contentType === 'ipfs') {
-				const ipfsData = JSON.parse(resource.content);
-				console.log('Debug: IPFS link:', ipfsData.link);
-				console.log('Debug: IPFS content type:', ipfsData.type);
+			 await wttp.fetch(`wttp://${contractAddress}/index.html`).then(async (response) => {
+				content = await response.text();
+				// console.log(content + "THIS IS WORKING")
+				// if (content) {
+				// 	console.log("Wrokign")
+				// 	return new Response(content, {
+				// 		status: 200,
+				// 		headers: { 'content-type': "text/html" }
+				// 	});
+				// } else {
+				// 	return new Response('Resource not found', {
+				// 		status: 404,
+				// 		headers: { 'content-type': 'text/plain' }
+				// 	});
+				// }
+			});
 
-				// Fetch the content from IPFS using a gateway
-				const ipfsResponse = await fetch(`${ipfsData.link}`);
+
+			// if (resource.contentType === 'ipfs') {
+			// 	const ipfsData = JSON.parse(resource.content);
+			// 	console.log('Debug: IPFS link:', ipfsData.link);
+			// 	console.log('Debug: IPFS content type:', ipfsData.type);
+
+			// 	// Fetch the content from IPFS using a gateway
+			// 	const ipfsResponse = await fetch(`${ipfsData.link}`);
 
 
-				// Check if the response is okay
-				if (!ipfsResponse.ok) {
-					throw new Error(`Error fetching IPFS content: ${ipfsResponse.statusText}`);
-				}
+			// 	// Check if the response is okay
+			// 	if (!ipfsResponse.ok) {
+			// 		throw new Error(`Error fetching IPFS content: ${ipfsResponse.statusText}`);
+			// 	}
 
-				// Read the response as a Blob for binary data
-				const ipfsBlob = await ipfsResponse.blob();
+			// 	// Read the response as a Blob for binary data
+			// 	const ipfsBlob = await ipfsResponse.blob();
 
-				return new Response(ipfsBlob, {
+			// 	return new Response(ipfsBlob, {
+			// 		status: 200,
+			// 		headers: { 'content-type': ipfsData.type }
+			// 	});
+
+			// }
+			// console.log(contenttest);
+			
+			if (content) {
+				return new Response(content, {
 					status: 200,
-					headers: { 'content-type': ipfsData.type }
-				});
-
-			}
-
-			if (resource) {
-				return new Response(resource.content, {
-					status: 200,
-					headers: { 'content-type': resource.contentType }
+					headers: { 'content-type': 'text/html' }
 				});
 			} else {
 				return new Response('Resource not found', {
