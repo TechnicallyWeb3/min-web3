@@ -578,7 +578,7 @@ function registerBundleProtocol(ses) {
 
 			let content = "";
 
-			 await wttp.fetch(`wttp://${contractAddress}/index.html`).then(async (response) => {
+			await wttp.fetch(`wttp://${contractAddress}${path}`).then(async (response) => {
 				content = await response.text();
 				// console.log(content + "THIS IS WORKING")
 				// if (content) {
@@ -595,32 +595,44 @@ function registerBundleProtocol(ses) {
 				// }
 			});
 
+			console.log(content)
 
-			// if (resource.contentType === 'ipfs') {
-			// 	const ipfsData = JSON.parse(resource.content);
-			// 	console.log('Debug: IPFS link:', ipfsData.link);
-			// 	console.log('Debug: IPFS content type:', ipfsData.type);
+			function isJSON(content) {
+				try {
+					JSON.parse(content);
+					return true; // It's a valid JSON
+				} catch (e) {
+					return false; // It's not a valid JSON
+				}
+			}
 
-			// 	// Fetch the content from IPFS using a gateway
-			// 	const ipfsResponse = await fetch(`${ipfsData.link}`);
 
 
-			// 	// Check if the response is okay
-			// 	if (!ipfsResponse.ok) {
-			// 		throw new Error(`Error fetching IPFS content: ${ipfsResponse.statusText}`);
-			// 	}
+			if (isJSON(content)) {
+				const ipfsData = JSON.parse(content);
+				console.log('Debug: IPFS link:', ipfsData.link);
+				console.log('Debug: IPFS content type:', ipfsData.type);
 
-			// 	// Read the response as a Blob for binary data
-			// 	const ipfsBlob = await ipfsResponse.blob();
+				// Fetch the content from IPFS using a gateway
+				const ipfsResponse = await fetch(`${ipfsData.link}`);
 
-			// 	return new Response(ipfsBlob, {
-			// 		status: 200,
-			// 		headers: { 'content-type': ipfsData.type }
-			// 	});
 
-			// }
-			// console.log(contenttest);
-			
+				// Check if the response is okay
+				if (!ipfsResponse.ok) {
+					throw new Error(`Error fetching IPFS content: ${ipfsResponse.statusText}`);
+				}
+
+				// Read the response as a Blob for binary data
+				const ipfsBlob = await ipfsResponse.blob();
+
+				return new Response(ipfsBlob, {
+					status: 200,
+					headers: { 'content-type': ipfsData.type }
+				});
+
+			}
+
+
 			if (content) {
 				return new Response(content, {
 					status: 200,
