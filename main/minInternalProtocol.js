@@ -577,22 +577,71 @@ function registerBundleProtocol(ses) {
 			console.log('Debug: Path:', path);
 
 			let content = "";
+			let contentType = ""
 
 			await wttp.fetch(`wttp://${contractAddress}${path}`).then(async (response) => {
 				content = await response.text();
-				// console.log(content + "THIS IS WORKING")
-				// if (content) {
-				// 	console.log("Wrokign")
-				// 	return new Response(content, {
-				// 		status: 200,
-				// 		headers: { 'content-type': "text/html" }
-				// 	});
-				// } else {
-				// 	return new Response('Resource not found', {
-				// 		status: 404,
-				// 		headers: { 'content-type': 'text/plain' }
-				// 	});
-				// }
+
+				const MIME_TYPES_REVERSE = {
+					// Text types
+					'0x7470': 'text/plain',
+					'0x7468': 'text/html',
+					'0x7463': 'text/css',
+					'0x7473': 'text/javascript',
+					'0x746D': 'text/markdown',
+					'0x7478': 'text/xml',
+					'0x7467': 'text/csv',
+					'0x7443': 'text/calendar',
+	
+					// Application types
+					'0x786A': 'application/json',
+					'0x7878': 'application/xml',
+					'0x7870': 'application/pdf',
+					'0x787A': 'application/zip',
+					'0x786F': 'application/octet-stream',
+					'0x7877': 'application/x-www-form-urlencoded',
+					'0x7865': 'application/vnd.ms-excel',
+					'0x7866': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+	
+					// Image types
+					'0x6970': 'image/png',
+					'0x696A': 'image/jpeg',
+					'0x6967': 'image/gif',
+					'0x6977': 'image/webp',
+					'0x6973': 'image/svg+xml',
+					'0x6962': 'image/bmp',
+					'0x6974': 'image/tiff',
+					'0x6969': 'image/x-icon',
+	
+					// Audio types
+					'0x616D': 'audio/mpeg',
+					'0x6177': 'audio/wav',
+					'0x616F': 'audio/ogg',
+	
+					// Video types
+					'0x766D': 'video/mp4',
+					'0x7677': 'video/webm',
+					'0x766F': 'video/ogg',
+	
+					// Multipart types
+					'0x7066': 'multipart/form-data',
+					'0x7062': 'multipart/byteranges'
+				}
+
+				const contentTypeHeader = response.headers.get('content-type');
+				contentType = contentTypeHeader ? contentTypeHeader.split(';')[0] : null;
+				console.log("Content-Type:", contentType);
+
+			
+
+				// Find the corresponding MIME type
+				const mimeType = MIME_TYPES_REVERSE[contentType] || 'UNKNOWN';
+
+				console.log(mimeType); // Output: TEXT_PLAIN
+
+				contentType = mimeType;
+				console.log(mimeType)
+
 			});
 
 			console.log(content)
@@ -632,11 +681,18 @@ function registerBundleProtocol(ses) {
 
 			}
 
+			
+
+
+
+
 
 			if (content) {
+
+
 				return new Response(content, {
 					status: 200,
-					headers: { 'content-type': 'text/html' }
+					headers: { 'content-type': contentType }
 				});
 			} else {
 				return new Response('Resource not found', {
