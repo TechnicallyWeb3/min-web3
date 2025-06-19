@@ -110,3 +110,32 @@
     background: #e3e3e3;
   }
   
+  #tabs-inner {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    overflow-x: auto;
+    white-space: nowrap;
+    height: 100%;
+    scrollbar-width: none; /* Firefox */
+  }
+  #tabs-inner::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+  }
+
+  .tab-item {
+    flex: 0 1 220px;
+    min-width: 120px;
+    max-width: 220px;
+    margin-right: 2px;
+    transition: width 0.2s;
+    /* Add your tab styling here */
+  }
+
+  #add-tab-button, #new-tab-btn {
+    flex: 0 0 auto;
+    min-width: 40px;
+    max-width: 40px;
+    margin-left: 4px;
+  }
+  
