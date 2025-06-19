@@ -202,6 +202,12 @@ const tabBar = {
       tabBar.tabElementMap[tab.id] = el
     })
 
+    // Always append the add-tab-button at the end
+    var addTabBtn = document.getElementById('add-tab-button')
+    if (addTabBtn) {
+      tabBar.containerInner.appendChild(addTabBtn)
+    }
+
     if (tabs.getSelected()) {
       tabBar.setActiveTab(tabs.getSelected())
     }
