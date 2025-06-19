@@ -14,7 +14,7 @@
   #navbar {
     border-radius: 10 10 0px 0px; /* Adjust the values as needed */
     /* Optional: Add border to see the rounded corners */
-    background-color: black;
+    background: #202020 !important;
   }
   
   /* Persistent Address Bar Bar Styles */
@@ -24,9 +24,12 @@
     gap: 8px;
     height: 44px;
     padding: 0 16px;
-    background: var(--theme-background-color, #f8f9fa);
-    border-bottom: 1px solid #e0e0e0;
+    position: relative;
     z-index: 9;
+    margin-top: 0;
+    margin-bottom: 0;
+    box-shadow: 0 1px 0 #e0e0e0;
+    background: #3B3B3B;
   }
   #address-bar-bar .browser-nav-btn {
     background: none;
@@ -133,6 +136,44 @@
     max-width: 220px;
     margin-right: 2px;
     transition: width 0.2s;
-    /* Add your tab styling here */
+    background: #202020;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border: 1.5px solid #444;
+    border-bottom: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    position: relative;
+    z-index: 1;
+  }
+  .tab-item.active {
+    background: #3B3B3B;
+    z-index: 2;
+  }
+  .tab-item .title {
+    font-size: 0.95em;
+  }
+  
+  #address-bar {
+    font-size: 0.95em;
+  }
+  
+  .dark-theme .tab-item.active:not(:only-child) {
+    background: #3B3B3B;
+    /* background: rgba(255, 255, 255, 0.2); */
+  }
+  .tab-item.active:not(:only-child) {
+    background: #3B3B3B;
+    /* background: rgba(0, 0, 0, 0.06); */
+  }
+  
+  #top-bar {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background: #202020;
+    z-index: 20;
+    position: relative;
+    min-height: 48px;
+    padding: 0;
   }
   
