@@ -154,6 +154,17 @@
       </div>
     </div>
 
+    <!-- Persistent Address Bar Bar: now directly below the tab bar -->
+    <div id="address-bar-bar" class="theme-background-color theme-text-color">
+      <button id="nav-back" class="browser-nav-btn i carbon:chevron-left" title="Back"></button>
+      <button id="nav-forward" class="browser-nav-btn i carbon:chevron-right" title="Forward"></button>
+      <button id="nav-reload" class="browser-nav-btn i carbon:reload" title="Reload"></button>
+      <button id="nav-home" class="browser-nav-btn i carbon:home" title="Home"></button>
+      <span id="security-icon" class="i carbon:locked"></span>
+      <input id="address-bar" class="browser-address-input" type="text" placeholder="Search or enter address" spellcheck="false" />
+      <button id="bookmark-btn" class="i carbon:star" title="Bookmark"></button>
+    </div>
+
     <button
       id="switch-task-button"
       class="navbar-action-button theme-text-color windowDragHandle i"
@@ -343,6 +354,25 @@
       ></div>
       <div id="password-viewer-list"></div>
     </div>
+
+    <!-- Modern Browser Top Bar Start -->
+    <div id="browser-top-bar" class="theme-background-color theme-text-color windowDragHandle">
+      <div class="browser-bar-left">
+        <!-- (Tabs and other controls remain here) -->
+      </div>
+      <div class="browser-bar-center">
+        <!-- Remove address bar from here if present -->
+      </div>
+      <div class="browser-bar-right">
+        <!-- (Menu, profile, etc.) -->
+      </div>
+    </div>
+    <!-- Tabs Bar -->
+    <div id="tabs-bar" class="theme-background-color theme-text-color">
+      <div id="tabs-list" class="tabs-list"></div>
+      <button id="new-tab-btn" class="i carbon:add tabs-new-btn" title="New Tab"></button>
+    </div>
+    <!-- Modern Browser Top Bar End -->
 
     <!-- add scripts in Gruntfile.js -->
 

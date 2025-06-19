@@ -17,3 +17,83 @@
     background-color: black;
   }
   
+  /* Persistent Address Bar Bar Styles */
+  #address-bar-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 16px;
+    background: var(--theme-background-color, #f8f9fa);
+    border-bottom: 1px solid #e0e0e0;
+    z-index: 9;
+  }
+  #address-bar-bar .browser-nav-btn {
+    background: none;
+    border: none;
+    color: #444;
+    font-size: 1.2em;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  #address-bar-bar .browser-nav-btn:hover {
+    background: #e3e3e3;
+  }
+  #address-bar-bar #security-icon {
+    font-size: 1.1em;
+    color: #4caf50;
+    margin-right: 6px;
+  }
+  #address-bar-bar .browser-address-input {
+    flex: 1;
+    min-width: 180px;
+    max-width: 700px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #d0d0d0;
+    background: #fff;
+    color: #222;
+    font-size: 1em;
+    transition: border 0.2s;
+  }
+  #address-bar-bar .browser-address-input:focus {
+    border: 1.5px solid #1976d2;
+    outline: none;
+  }
+  #address-bar-bar #bookmark-btn {
+    margin-left: 8px;
+    font-size: 1.1em;
+    color: #ffb300;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  #address-bar-bar #bookmark-btn:hover {
+    color: #ffa000;
+  }
+
+  /* Dark mode for address bar bar */
+  body.dark-mode #address-bar-bar {
+    background: #23272f;
+    border-bottom: 1px solid #333;
+  }
+  body.dark-mode #address-bar-bar .browser-nav-btn {
+    color: #bbb;
+  }
+  body.dark-mode #address-bar-bar .browser-nav-btn:hover {
+    background: #333;
+  }
+  body.dark-mode #address-bar-bar .browser-address-input {
+    background: #2c2f36;
+    color: #eee;
+    border: 1px solid #444;
+  }
+  body.dark-mode #address-bar-bar #bookmark-btn {
+    color: #ffd54f;
+  }
+  body.dark-mode #address-bar-bar #bookmark-btn:hover {
+    color: #fff176;
+  }
+  

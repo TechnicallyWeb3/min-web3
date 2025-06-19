@@ -282,6 +282,78 @@ ipc.on('focusWebview', function (e, tabId) {
   tabEditor.hide();
 });
 
+// Persistent Address Bar and Navigation Buttons Logic
+
+document.addEventListener('DOMContentLoaded', function () {
+  const addressBar = document.getElementById('address-bar');
+  const navBack = document.getElementById('nav-back');
+  const navForward = document.getElementById('nav-forward');
+  const navReload = document.getElementById('nav-reload');
+  const navHome = document.getElementById('nav-home');
+  const bookmarkBtn = document.getElementById('bookmark-btn');
+  const securityIcon = document.getElementById('security-icon');
+
+  // Helper to update address bar with current tab's URL
+  function updateAddressBar() {
+    const tab = tabs.get(tabs.getSelected());
+    if (!tab) return;
+    addressBar.value = tab.url || '';
+    // Optionally update security icon (locked/unlocked)
+    if (tab.secure === false) {
+      securityIcon.className = 'i carbon:unlocked';
+      securityIcon.title = 'Not Secure';
+    } else {
+      securityIcon.className = 'i carbon:locked';
+      securityIcon.title = 'Secure';
+    }
+  }
+
+  // Update address bar on tab switch and tab update
+  tabBar.events.on('tab-selected', updateAddressBar);
+  tasks.on('tab-updated', function (id, key) {
+    if (id === tabs.getSelected() && (key === 'url' || key === 'secure')) {
+      updateAddressBar();
+    }
+  });
+
+  // On Enter in address bar, navigate current tab
+  addressBar.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      let url = addressBar.value.trim();
+      if (!/^([a-zA-Z]+:|\.|\/)/.test(url)) {
+        // Not a protocol, treat as search
+        url = searchEngine.getSearch(url).url;
+      }
+      webviews.update(tabs.getSelected(), url);
+    }
+  });
+
+  // Navigation buttons
+  navBack.addEventListener('click', function () {
+    webviews.callAsync(tabs.getSelected(), 'goBack');
+  });
+  navForward.addEventListener('click', function () {
+    webviews.callAsync(tabs.getSelected(), 'goForward');
+  });
+  navReload.addEventListener('click', function () {
+    webviews.callAsync(tabs.getSelected(), 'reload');
+  });
+  navHome.addEventListener('click', function () {
+    // You can set your home page here
+    webviews.update(tabs.getSelected(), settings.get('homePage') || 'min://newtab');
+  });
+
+  // Bookmark button (toggle bookmark)
+  bookmarkBtn.addEventListener('click', function () {
+    // Implement bookmark logic here if needed
+    // For now, just a placeholder
+    alert('Bookmark feature coming soon!');
+  });
+
+  // Initial sync
+  updateAddressBar();
+});
+
 module.exports = {
   addTask,
   addTab,

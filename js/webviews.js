@@ -159,22 +159,26 @@ const webviews = {
         height: window.innerHeight
       }
     } else {
-      if (!hasSeparateTitlebar && (window.platformType === 'linux' || window.platformType === 'windows') && !windowIsMaximized && !windowIsFullscreen) {
-        var navbarHeight = 48
-      } else {
-        var navbarHeight = 36
+      // Calculate the total height of the tab bar and address bar bar
+      var navbarHeight = 0;
+      var addressBarBarHeight = 0;
+      var navbar = document.getElementById('navbar');
+      var addressBarBar = document.getElementById('address-bar-bar');
+      if (navbar) {
+        navbarHeight = navbar.getBoundingClientRect().height;
       }
-
-      const viewMargins = webviews.viewMargins
-
+      if (addressBarBar) {
+        addressBarBarHeight = addressBarBar.getBoundingClientRect().height;
+      }
+      const totalTopBarHeight = navbarHeight + addressBarBarHeight;
+      const viewMargins = webviews.viewMargins;
       let position = {
         x: 0 + Math.round(viewMargins[3]),
-        y: 0 + Math.round(viewMargins[0]) + navbarHeight,
+        y: 0 + Math.round(viewMargins[0]) + totalTopBarHeight,
         width: window.innerWidth - Math.round(viewMargins[1] + viewMargins[3]),
-        height: window.innerHeight - Math.round(viewMargins[0] + viewMargins[2]) - navbarHeight
-      }
-
-      return position
+        height: window.innerHeight - Math.round(viewMargins[0] + viewMargins[2]) - totalTopBarHeight
+      };
+      return position;
     }
   },
   add: function (tabId, existingViewId) {
