@@ -47,9 +47,9 @@
     margin-right: 6px;
   }
   #address-bar-bar .browser-address-input {
-    flex: 1;
+    flex: 0 1 400px;
     min-width: 180px;
-    max-width: 700px;
+    max-width: 400px;
     padding: 8px 12px;
     border-radius: 6px;
     border: 1px solid #d0d0d0;
@@ -57,6 +57,7 @@
     color: #222;
     font-size: 1em;
     transition: border 0.2s;
+    margin-right: 4px;
   }
   #address-bar-bar .browser-address-input:focus {
     border: 1.5px solid #1976d2;
@@ -95,5 +96,17 @@
   }
   body.dark-mode #address-bar-bar #bookmark-btn:hover {
     color: #fff176;
+  }
+  
+  #add-tab-button.browser-nav-btn {
+    margin-left: 0;
+    font-size: 1.3em;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  #add-tab-button.browser-nav-btn:hover {
+    background: #e3e3e3;
   }
   

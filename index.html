@@ -123,6 +123,7 @@
         class="navbar-action-button i carbon:overflow-menu-vertical"
         data-label="openMenu"
         tabindex="-1"
+        hidden
       ></button>
       <div id="toolbar-navigation-buttons" hidden>
           <button
@@ -144,14 +145,6 @@
         </div>
         <div id="tabs-inner" role="tablist" class="has-thin-scrollbar"></div>
       </div>
-      <div class="navbar-right-actions">
-        <button
-          id="add-tab-button"
-          class="navbar-action-button i carbon:add"
-          data-label="newTabAction"
-          tabindex="-1"
-        ></button>
-      </div>
     </div>
 
     <!-- Persistent Address Bar Bar: now directly below the tab bar -->
@@ -163,6 +156,7 @@
       <span id="security-icon" class="i carbon:locked"></span>
       <input id="address-bar" class="browser-address-input" type="text" placeholder="Search or enter address" spellcheck="false" />
       <button id="bookmark-btn" class="i carbon:star" title="Bookmark"></button>
+      <button id="add-tab-button" class="browser-nav-btn i carbon:add" title="New Tab"></button>
     </div>
 
     <button
@@ -170,6 +164,7 @@
       class="navbar-action-button theme-text-color windowDragHandle i"
       data-label="viewTasks"
       tabindex="-1"
+      hidden
     >
       <svg
         version="1.1"
