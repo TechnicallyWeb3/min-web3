@@ -106,27 +106,27 @@ const tabBar = {
       }
     })
 
-    tabEl.addEventListener('wheel', function (e) {
-      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
-        // https://github.com/minbrowser/min/issues/698
-        return
-      }
-      if (e.deltaY > 65 && e.deltaX < 10 && Date.now() - lastTabDeletion > 900) { // swipe up to delete tabs
-        lastTabDeletion = Date.now()
+    // tabEl.addEventListener('wheel', function (e) {
+    //   if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+    //     // https://github.com/minbrowser/min/issues/698
+    //     return
+    //   }
+    //   if (e.deltaY > 65 && e.deltaX < 10 && Date.now() - lastTabDeletion > 900) { // swipe up to delete tabs
+    //     lastTabDeletion = Date.now()
 
-        /* tab deletion is disabled in focus mode */
-        if (focusMode.enabled()) {
-          focusMode.warn()
-          return
-        }
+    //     /* tab deletion is disabled in focus mode */
+    //     if (focusMode.enabled()) {
+    //       focusMode.warn()
+    //       return
+    //     }
 
-        this.style.transform = 'translateY(-100%)'
+    //     this.style.transform = 'translateY(-100%)'
 
-        setTimeout(function () {
-          tabBar.events.emit('tab-closed', data.id)
-        }, 150) // wait until the animation has completed
-      }
-    })
+    //     setTimeout(function () {
+    //       tabBar.events.emit('tab-closed', data.id)
+    //     }, 150) // wait until the animation has completed
+    //   }
+    // })
 
     tabBar.updateTab(data.id, tabEl)
 
@@ -202,8 +202,8 @@ const tabBar = {
       tabBar.tabElementMap[tab.id] = el
     })
 
-    // Always append the add-tab-button at the end
-    var addTabBtn = document.getElementById('add-tab-button')
+    // Always create and append the add-tab-button at the end
+    let addTabBtn = document.getElementById('add-tab-button')
     if (addTabBtn) {
       tabBar.containerInner.appendChild(addTabBtn)
     }
@@ -212,6 +212,9 @@ const tabBar = {
       tabBar.setActiveTab(tabs.getSelected())
     }
     tabBar.handleSizeChange()
+
+    // Auto-scroll to end to keep add-tab-button visible
+    tabBar.containerInner.scrollLeft = tabBar.containerInner.scrollWidth
   },
   addTab: function (tabId) {
     var tab = tabs.get(tabId)
@@ -221,6 +224,9 @@ const tabBar = {
     tabBar.containerInner.insertBefore(tabEl, tabBar.containerInner.childNodes[index])
     tabBar.tabElementMap[tabId] = tabEl
     tabBar.handleSizeChange()
+
+    // Auto-scroll to end to keep add-tab-button visible
+    tabBar.containerInner.scrollLeft = tabBar.containerInner.scrollWidth
   },
   removeTab: function (tabId) {
     var tabEl = tabBar.getTab(tabId)

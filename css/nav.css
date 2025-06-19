@@ -98,16 +98,20 @@
     color: #fff176;
   }
   
-  #add-tab-button.browser-nav-btn {
-    margin-left: 0;
-    font-size: 1.3em;
-    padding: 6px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.15s;
+  #add-tab-button, #new-tab-btn {
+    flex: 0 0 auto;
+    min-width: 40px;
+    max-width: 40px;
+    margin-left: 4px;
+    position: sticky;
+    right: 0;
+    z-index: 2;
+    background: #2d2d2d;
+    color: #fff;
+    border: none;
   }
-  #add-tab-button.browser-nav-btn:hover {
-    background: #e3e3e3;
+  #add-tab-button:hover, #new-tab-btn:hover {
+    background: #444;
   }
   
   #tabs-inner {
@@ -130,12 +134,5 @@
     margin-right: 2px;
     transition: width 0.2s;
     /* Add your tab styling here */
-  }
-
-  #add-tab-button, #new-tab-btn {
-    flex: 0 0 auto;
-    min-width: 40px;
-    max-width: 40px;
-    margin-left: 4px;
   }
   
