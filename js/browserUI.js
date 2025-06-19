@@ -344,6 +344,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Initial sync
   updateAddressBar();
+
+  // Dynamically set CSS variables for bar heights
+  function setBarHeightsVars() {
+    const topBar = document.getElementById('top-bar');
+    const addressBarBar = document.getElementById('address-bar-bar');
+    document.body.style.setProperty('--top-bar-height', topBar ? topBar.offsetHeight + 'px' : '0px');
+    document.body.style.setProperty('--address-bar-bar-height', addressBarBar ? addressBarBar.offsetHeight + 'px' : '0px');
+  }
+  setBarHeightsVars();
+  window.addEventListener('resize', setBarHeightsVars);
+  window.addEventListener('load', setBarHeightsVars);
 });
 
 // Ensure webview is correctly sized after all UI is rendered
