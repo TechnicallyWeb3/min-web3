@@ -10,7 +10,6 @@ var settings = require('util/settings/settings.js')
 var webviews = require('webviews.js')
 var focusMode = require('focusMode.js')
 var tabBar = require('navbar/tabBar.js')
-var tabEditor = require('navbar/tabEditor.js')
 var searchbar = require('searchbar/searchbar.js')
 
 /* creates a new task */
@@ -194,8 +193,6 @@ function switchToTab (id, options) {
     focus: options.focusWebview !== false
   })
 
-  tabEditor.hide()
-
   if (!tabs.get(id).url) {
     document.body.classList.add('is-ntp')
   } else {
@@ -261,7 +258,6 @@ searchbar.events.on('url-selected', function (data) {
     })
   } else {
     webviews.update(tabs.getSelected(), data.url)
-    tabEditor.hide()
   }
 })
 
@@ -276,7 +272,6 @@ tabBar.events.on('tab-closed', function (id) {
 ipc.on('focusWebview', function (e, tabId) {
   console.log("Received focusWebview event in browserUI", tabId);
   webviews.focus(tabId);
-  tabEditor.hide();
 });
 
 // Persistent Address Bar and Navigation Buttons Logic
@@ -349,6 +344,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Initial sync
   updateAddressBar();
+});
+
+// Ensure webview is correctly sized after all UI is rendered
+window.addEventListener('load', function () {
+  if (window.webviews && typeof window.webviews.resize === 'function') {
+    window.webviews.resize();
+    setTimeout(function() {
+      window.webviews.resize();
+    }, 100);
+  }
 });
 
 module.exports = {
