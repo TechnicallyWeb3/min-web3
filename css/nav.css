@@ -105,11 +105,13 @@
     flex: 0 0 auto;
     min-width: 40px;
     max-width: 40px;
-    margin-left: 4px;
+    margin: 4px;
+    margin-left: 2px;
     position: sticky;
     right: 0;
     z-index: 2;
     background: #2d2d2d;
+    border-radius: 5px;
     color: #fff;
     border: none;
   }
