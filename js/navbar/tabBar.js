@@ -81,6 +81,10 @@ const tabBar = {
     var titleContainer = document.createElement('div')
     titleContainer.className = 'title-container'
 
+    var spinner = document.createElement('span')
+    spinner.className = 'tab-spinner'
+    titleContainer.appendChild(spinner)
+
     var favicon = document.createElement('img')
     favicon.className = 'tab-favicon'
     titleContainer.appendChild(favicon)
@@ -136,6 +140,26 @@ const tabBar = {
     //   }
     // })
 
+    var spinner = tabEl.querySelector('.tab-spinner')
+    var favicon = tabEl.querySelector('.tab-favicon')
+    const isNewTab = data.url === '' || data.url === urlParser.parse('min://newtab')
+    if (isNewTab) {
+      spinner.style.display = 'none'
+      favicon.style.display = ''
+      favicon.src = 'assets/tw3.png'
+    } else if (!data.loaded) {
+      spinner.style.display = ''
+      favicon.style.display = 'none'
+    } else {
+      spinner.style.display = 'none'
+      if (data.favicon) {
+        favicon.style.display = ''
+        favicon.src = data.favicon
+      } else {
+        favicon.style.display = 'none'
+      }
+    }
+
     tabBar.updateTab(data.id, tabEl)
 
     return tabEl
@@ -160,12 +184,23 @@ const tabBar = {
     var titleEl = tabEl.querySelector('.title')
     titleEl.textContent = tabTitle
 
+    var spinner = tabEl.querySelector('.tab-spinner')
     var favicon = tabEl.querySelector('.tab-favicon')
-    if (tabData.favicon) {
-      favicon.src = tabData.favicon
-      favicon.hidden = false
+    if (isNewTab) {
+      spinner.style.display = 'none'
+      favicon.style.display = ''
+      favicon.src = 'assets/tw3.png'
+    } else if (!tabData.loaded) {
+      spinner.style.display = ''
+      favicon.style.display = 'none'
     } else {
-      favicon.hidden = true
+      spinner.style.display = 'none'
+      if (tabData.favicon) {
+        favicon.style.display = ''
+        favicon.src = tabData.favicon
+      } else {
+        favicon.style.display = 'none'
+      }
     }
 
     tabEl.title = tabTitle
@@ -314,7 +349,7 @@ webviews.bindEvent('did-stop-loading', function (tabId) {
 })
 
 tasks.on('tab-updated', function (id, key) {
-  var updateKeys = ['title', 'secure', 'url', 'muted', 'hasAudio', 'favicon']
+  var updateKeys = ['title', 'secure', 'url', 'muted', 'hasAudio', 'favicon', 'loaded']
   if (updateKeys.includes(key)) {
     tabBar.updateTab(id)
   }
