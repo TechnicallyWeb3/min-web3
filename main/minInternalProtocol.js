@@ -98,9 +98,9 @@ function registerBundleProtocol(ses) {
 
 				contentType = response.headers['Content-Type'] || response.headers['content-type'];
 				console.log("Content-Type:", contentType);
-
 			});
 
+			console.log(res)
 			console.log(res)
 
 			console.log(content)
