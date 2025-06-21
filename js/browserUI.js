@@ -32,8 +32,14 @@ function addTask () {
 options
   options.enterEditMode - whether to enter editing mode when the tab is created. Defaults to true.
   options.openInBackground - whether to open the tab without switching to it. Defaults to false.
+  options.url - the URL to open in the new tab.
 */
-function addTab (tabId = tabs.add(), options = {}) {
+function addTab (options = {}) {
+  var tabId = tabs.add({
+    url: options.url || null,
+    private: options.private || false
+  })
+
   /*
   adding a new tab should destroy the current one if either:
   * The current tab is an empty, non-private tab, and the new tab is private
@@ -49,7 +55,7 @@ function addTab (tabId = tabs.add(), options = {}) {
 
   if (!options.openInBackground) {
     switchToTab(tabId, {
-      focusWebview: options.enterEditMode === false
+      focusWebview: false // focus the address bar by default
     })
   } else {
     tabBar.getTab(tabId).scrollIntoView()
@@ -193,10 +199,17 @@ function switchToTab (id, options) {
     focus: options.focusWebview !== false
   })
 
+  const addressBar = document.getElementById('address-bar')
+
   if (!tabs.get(id).url) {
     document.body.classList.add('is-ntp')
+    addressBar.value = ''
+    if (options.focusWebview === false) {
+      addressBar.focus()
+    }
   } else {
     document.body.classList.remove('is-ntp')
+    addressBar.value = tabs.get(id).url
   }
 }
 
@@ -207,24 +220,16 @@ tasks.on('tab-updated', function (id, key) {
 })
 
 webviews.bindEvent('did-create-popup', function (tabId, popupId, initialURL) {
-  var popupTab = tabs.add({
-    // in most cases, initialURL will be overwritten once the popup loads, but if the URL is a downloaded file, it will remain the same
+  addTab({
     url: initialURL,
     private: tabs.get(tabId).private
   })
-  tabBar.addTab(popupTab)
-  webviews.add(popupTab, popupId)
-  switchToTab(popupTab)
 })
 
 webviews.bindEvent('new-tab', function (tabId, url, openInForeground) {
-  var newTab = tabs.add({
+  addTab({
     url: url,
-    private: tabs.get(tabId).private // inherit private status from the current tab
-  })
-
-  addTab(newTab, {
-    enterEditMode: false,
+    private: tabs.get(tabId).private, // inherit private status from the current tab
     openInBackground: !settings.get('openTabsInForeground') && !openInForeground
   })
 })
@@ -248,12 +253,9 @@ searchbar.events.on('url-selected', function (data) {
   }
 
   if (data.background) {
-    var newTab = tabs.add({
+    addTab({
       url: data.url,
-      private: tabs.get(tabs.getSelected()).private
-    })
-    addTab(newTab, {
-      enterEditMode: false,
+      private: tabs.get(tabs.getSelected()).private,
       openInBackground: true
     })
   } else {
