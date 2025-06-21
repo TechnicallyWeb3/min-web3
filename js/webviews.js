@@ -63,6 +63,12 @@ function onPageLoad (tabId) {
   }
 }
 
+function onFaviconChange (tabId, favicons) {
+  tabs.update(tabId, {
+    favicon: favicons[0]
+  })
+}
+
 function scrollOnLoad (tabId, scrollPosition) {
   const listener = function (eTabId) {
     if (eTabId === tabId) {
@@ -501,8 +507,8 @@ webviews.bindIPC('downloadFile', function (tabId, args) {
   }
 })
 
-ipc.on('view-event', function (e, args) {
-  webviews.emitEvent(args.event, args.tabId, args.args)
+ipc.on('view-event', function (e, data) {
+  webviews.emitEvent(data.event, data.tabId, data.args)
 })
 
 ipc.on('async-call-result', function (e, args) {
@@ -546,6 +552,11 @@ ipc.on('windowFocus', function () {
   if (webviews.placeholderRequests.length === 0 && document.activeElement.tagName !== 'INPUT') {
     webviews.focus()
   }
+})
+
+webviews.bindEvent('page-favicon-updated', onFaviconChange)
+webviews.bindEvent('did-navigate-in-page', function (tabId, url, isMainFrame) {
+  onPageURLChange(tabId, url)
 })
 
 module.exports = webviews

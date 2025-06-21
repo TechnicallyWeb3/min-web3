@@ -81,6 +81,14 @@ const tabBar = {
     var titleContainer = document.createElement('div')
     titleContainer.className = 'title-container'
 
+    var favicon = document.createElement('img')
+    favicon.className = 'tab-favicon'
+    titleContainer.appendChild(favicon)
+
+    var textContainer = document.createElement('div')
+    textContainer.className = 'tab-text-container'
+    titleContainer.appendChild(textContainer)
+
     var title = document.createElement('span')
     title.className = 'title'
 
@@ -89,8 +97,8 @@ const tabBar = {
     var urlElement = document.createElement('span')
     urlElement.className = 'url-element'
 
-    titleContainer.appendChild(title)
-    titleContainer.appendChild(urlElement)
+    textContainer.appendChild(title)
+    textContainer.appendChild(urlElement)
 
     tabEl.appendChild(titleContainer)
 
@@ -151,6 +159,14 @@ const tabBar = {
 
     var titleEl = tabEl.querySelector('.title')
     titleEl.textContent = tabTitle
+
+    var favicon = tabEl.querySelector('.tab-favicon')
+    if (tabData.favicon) {
+      favicon.src = tabData.favicon
+      favicon.hidden = false
+    } else {
+      favicon.hidden = true
+    }
 
     tabEl.title = tabTitle
     if (tabData.private) {
@@ -298,7 +314,7 @@ webviews.bindEvent('did-stop-loading', function (tabId) {
 })
 
 tasks.on('tab-updated', function (id, key) {
-  var updateKeys = ['title', 'secure', 'url', 'muted', 'hasAudio']
+  var updateKeys = ['title', 'secure', 'url', 'muted', 'hasAudio', 'favicon']
   if (updateKeys.includes(key)) {
     tabBar.updateTab(id)
   }
