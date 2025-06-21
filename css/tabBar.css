@@ -460,3 +460,17 @@ body:not(.dark-theme) .progress-bar {
 @keyframes tab-spin {
   100% { transform: rotate(360deg); }
 }
+
+.browser-nav-btn svg {
+  width: 1.2em;
+  height: 1.2em;
+  stroke: currentColor;
+  color: inherit;
+  display: inline-block;
+  vertical-align: middle;
+  margin-top: 2px;
+}
+
+button#nav-reload {
+  margin-bottom: 6px;
+}
