@@ -248,7 +248,7 @@ body:not(.touch)
   overflow: hidden;
   display: flex;
   align-items: center;
-  margin-left: 12px;
+  margin-left: 4px;
   min-width: 0;
 }
 .compact-tabs .tab-item .title {
@@ -443,4 +443,5 @@ body:not(.dark-theme) .progress-bar {
   overflow: hidden;
   text-align: left;
   position: relative;
+  font-size: 14px;
 }
