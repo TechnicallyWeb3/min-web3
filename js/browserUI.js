@@ -311,12 +311,8 @@ document.addEventListener('DOMContentLoaded', function () {
   // On Enter in address bar, navigate current tab
   addressBar.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') {
-      let url = addressBar.value.trim();
-      if (!/^([a-zA-Z]+:|\.|\/)/.test(url)) {
-        // Not a protocol, treat as search
-        url = searchEngine.getSearch(url).url;
-      }
-      webviews.update(tabs.getSelected(), url);
+      const url = urlParser.parse(addressBar.value.trim())
+      webviews.update(tabs.getSelected(), url)
     }
   });
 
