@@ -274,6 +274,8 @@
   .browser-address-input::placeholder {
     color: #aaa;
     opacity: 1;
+    text-align: left;
+    line-height: 38px;
   }
   body.dark-mode .browser-address-input::placeholder {
     color: #888;
