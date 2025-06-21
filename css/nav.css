@@ -44,23 +44,60 @@
   #address-bar-bar .browser-nav-btn:hover {
     background: #e3e3e3;
   }
-  #address-bar-bar #security-icon {
-    font-size: 1.1em;
-    color: #4caf50;
-    margin-right: 6px;
-  }
   #address-bar-bar .browser-address-input {
     flex: 1 1 0;
     min-width: 240px;
     max-width: none;
     padding: 8px 12px;
-    border-radius: 6px;
-    border: 1px solid #d0d0d0;
-    background: #fff;
+    border-radius: 999px;
+    border: none !important;
+    background: transparent !important;
     color: #222;
     font-size: 1em;
     transition: border 0.2s;
     margin-right: 4px;
+    box-sizing: border-box;
+  }
+  .address-bar-input-wrapper {
+    position: relative;
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: none;
+  }
+  .browser-address-input {
+    width: 100%;
+    padding: 8px 12px 8px 40px;
+    border-radius: 999px;
+    border: 1px solid #d0d0d0;
+    background: transparent !important;
+    color: #222;
+    font-size: 1em;
+    transition: border 0.2s;
+    box-sizing: border-box;
+    margin: 0;
+    min-width: 0;
+    height: 36px;
+    display: block;
+  }
+  #security-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.1em;
+    color: #4caf50;
+    pointer-events: none;
+    z-index: 10;
+    background: transparent;
+    height: 20px;
+    width: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   #address-bar-bar .browser-address-input:focus {
     border: 1.5px solid #1976d2;
@@ -177,5 +214,68 @@
     position: relative;
     min-height: 48px;
     padding: 0;
+  }
+  
+  .address-bar-bar-rounded {
+    display: flex;
+    align-items: center;
+    background: #23272f;
+    border: 1.5px solid #444;
+    border-radius: 999px;
+    height: 38px;
+    flex: 1 1 0;
+    min-width: 240px;
+    max-width: none;
+    box-sizing: border-box;
+    position: relative;
+    transition: background 0.2s, border 0.2s;
+    padding: 0 12px 0 0;
+  }
+  body:not(.dark-mode) .address-bar-bar-rounded {
+    background: #fff;
+    border: 1.5px solid #d0d0d0;
+  }
+
+  #security-icon {
+    min-width: 28px;
+    text-align: center;
+    font-size: 1.15em;
+    color: #4caf50;
+    pointer-events: none;
+    z-index: 10;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 6px;
+    margin-right: 0;
+    position: static;
+    margin-top: auto;
+
+  }
+
+  .browser-address-input {
+    flex: 1 1 0;
+    border: none !important;
+    outline: none;
+    background: transparent !important;
+    color: #eee;
+    font-size: 1em;
+    padding: 8px 0;
+    min-width: 0;
+    height: 100%;
+    box-sizing: border-box;
+    margin: 0;
+  }
+  body:not(.dark-mode) .browser-address-input {
+    color: #222;
+  }
+
+  .browser-address-input::placeholder {
+    color: #aaa;
+    opacity: 1;
+  }
+  body.dark-mode .browser-address-input::placeholder {
+    color: #888;
   }
   
