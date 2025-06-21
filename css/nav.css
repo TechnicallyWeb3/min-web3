@@ -50,9 +50,9 @@
     margin-right: 6px;
   }
   #address-bar-bar .browser-address-input {
-    flex: 0 1 400px;
-    min-width: 180px;
-    max-width: 400px;
+    flex: 1 1 0;
+    min-width: 240px;
+    max-width: none;
     padding: 8px 12px;
     border-radius: 6px;
     border: 1px solid #d0d0d0;
