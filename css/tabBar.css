@@ -93,6 +93,11 @@ body.linux #menu-button {
   flex: 1;
   overflow-x: auto;
   overflow-y: hidden;
+  transition: margin 0.12s cubic-bezier(0.4, 0.2, 0.2, 1),
+              transform 0.12s cubic-bezier(0.4, 0.2, 0.2, 1),
+              left 0.12s cubic-bezier(0.4, 0.2, 0.2, 1),
+              right 0.12s cubic-bezier(0.4, 0.2, 0.2, 1),
+              width 0.12s cubic-bezier(0.4, 0.2, 0.2, 1);
 }
 
 #tabs #tabs-inner.disable-scroll {
@@ -102,7 +107,9 @@ body.linux #menu-button {
 .tab-item {
   flex: 1;
   min-width: 125px;
-  transition: 0.2s transform;
+  transition: width 0.12s cubic-bezier(0.4, 0.2, 0.2, 1),
+              margin 0.12s cubic-bezier(0.4, 0.2, 0.2, 1),
+              transform 0.12s cubic-bezier(0.4, 0.2, 0.2, 1);
   line-height: 36px;
   height: 36px;
   overflow: hidden;
@@ -312,6 +319,10 @@ body.windows.dark-theme .navbar-action-button:not(:disabled):hover {
   padding: 0;
   width: 36px;
   font-size: 1.6em !important;
+  transition: margin 0.12s cubic-bezier(0.4, 0.2, 0.2, 1),
+              transform 0.12s cubic-bezier(0.4, 0.2, 0.2, 1),
+              left 0.12s cubic-bezier(0.4, 0.2, 0.2, 1),
+              right 0.12s cubic-bezier(0.4, 0.2, 0.2, 1);
 }
 
 /* audio button */
@@ -473,4 +484,36 @@ body:not(.dark-theme) .progress-bar {
 
 button#nav-reload {
   margin-bottom: 8px;
+}
+
+@keyframes tab-animate-in {
+  from {
+    opacity: 0;
+    transform: translateX(-32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.tab-item.tab-animate-in {
+  animation: tab-animate-in 0.12s cubic-bezier(0.4, 0.2, 0.2, 1) both;
+  z-index: 2;
+}
+
+.tab-item.tab-closing {
+  flex: none !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  border: none !important;
+  overflow: hidden !important;
+  transition: width 0.12s cubic-bezier(0.4,0.2,0.2,1),
+              min-width 0.12s cubic-bezier(0.4,0.2,0.2,1),
+              padding 0.12s cubic-bezier(0.4,0.2,0.2,1),
+              margin 0.12s cubic-bezier(0.4,0.2,0.2,1);
 }

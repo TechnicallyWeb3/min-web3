@@ -44,9 +44,16 @@ const tabBar = {
   },
   createTab: function (data) {
     var tabEl = document.createElement('div')
-    tabEl.className = 'tab-item'
+    tabEl.className = 'tab-item tab-animate-in'
     tabEl.setAttribute('data-tab', data.id)
     tabEl.setAttribute('role', 'tab')
+    // Remove animation class after animation ends so it doesn't replay on tab switches
+    tabEl.addEventListener('animationend', function handler(e) {
+      if (e.animationName === 'tab-animate-in') {
+        tabEl.classList.remove('tab-animate-in')
+        tabEl.removeEventListener('animationend', handler)
+      }
+    })
 
     tabEl.appendChild(readerView.getButton(data.id))
     tabEl.appendChild(tabAudio.getButton(data.id))
@@ -282,11 +289,27 @@ const tabBar = {
   removeTab: function (tabId) {
     var tabEl = tabBar.getTab(tabId)
     if (tabEl) {
-      // The tab does not have a corresponding .tab-item element.
-      // This happens when destroying tabs from other task where this .tab-item is not present
-      tabBar.containerInner.removeChild(tabEl)
-      delete tabBar.tabElementMap[tabId]
-      tabBar.handleSizeChange()
+      // Step 1: Remove flex:1 so we can animate width
+      tabEl.style.flex = 'none'
+      // Step 2: Set width to current computed width
+      const rect = tabEl.getBoundingClientRect()
+      tabEl.style.width = rect.width + 'px'
+      // Step 3: Force reflow
+      void tabEl.offsetWidth
+      // Step 4: Add .tab-closing and set width to 0
+      tabEl.classList.add('tab-closing')
+      tabEl.style.width = '0px'
+      // Step 5: Remove from DOM after transition
+      tabEl.addEventListener('transitionend', function handler(e) {
+        if (e.propertyName === 'width') {
+          tabEl.removeEventListener('transitionend', handler)
+          if (tabEl.parentNode) {
+            tabBar.containerInner.removeChild(tabEl)
+          }
+          delete tabBar.tabElementMap[tabId]
+          tabBar.handleSizeChange()
+        }
+      })
     }
   },
   handleDividerPreference: function (dividerPreference) {
