@@ -31,53 +31,10 @@ function registerWttpProtocol (ses) {
     try {
       const response = await wttp.fetch(req.url)
       console.log('WTTP handler success, response status:', response.status)
-      
-      // // For successful responses, handle the actual response format from @wttp/handler
-      // if (response.status >= 200 && response.status < 300) {
-      //   // @wttp/handler returns content as uint8 array or text, not standard Response object
-      //   let body = response.body
-      //   let contentType = 'text/html'
-        
-      //   // Check if response has headers to determine content type
-      //   if (response.headers && response.headers['content-type']) {
-      //     contentType = response.headers['content-type']
-      //   }
-        
-      //   // If body is a Uint8Array, convert it to text or keep as buffer
-      //   if (body instanceof Uint8Array) {
-      //     if (contentType.includes('text/') || contentType.includes('html') || contentType.includes('json')) {
-      //       // Convert to text for text-based content
-      //       body = new TextDecoder('utf-8').decode(body)
-      //     } else {
-      //       // Keep as buffer for binary content
-      //       body = Buffer.from(body)
-      //     }
-      //   }
-        
-      //   return new Response(body, {
-      //     status: response.status,
-      //     statusText: response.statusText || 'OK',
-      //     headers: { 
-      //       'content-type': contentType,
-      //       ...(response.headers || {})
-      //     }
-      //   })
-      // } else {
-      //   // For error responses
-      //   console.log('WTTP response error, status:', response.status)
-      //   let errorBody = response.body || `HTTP Error ${response.status}`
-        
-      //   // Handle Uint8Array error responses
-      //   if (errorBody instanceof Uint8Array) {
-      //     errorBody = new TextDecoder('utf-8').decode(errorBody)
-      //   }
-        
-      //   return new Response(errorBody, {
-      //     status: response.status,
-      //     statusText: response.statusText || 'Error',
-      //     headers: { 'content-type': 'text/html' }
-      //   })
-      // }
+      return new Response(response.body, {
+        status: response.status,
+        headers: response.headers
+      })
     } catch (error) {
       console.error('WTTP handler error:', error)
       return new Response(`Error: ${error.message}`, {
