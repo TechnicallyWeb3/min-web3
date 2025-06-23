@@ -19,6 +19,26 @@ const {
   WebContentsView
 } = electron
 
+// Register wttp protocol scheme for Web3 support
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'wttp',
+    privileges: {
+      standard: true,
+      secure: true,
+      allowServiceWorkers: true,
+      supportFetchAPI: true,
+      corsEnabled: true,
+      stream: true,
+      bypassCSP: false,
+      displayIsolated: false
+    }
+  }
+])
+
+// Initialize wttp protocol handlers (defined in wttpProtocol.js)
+initializeWttpProtocol()
+
 crashReporter.start({
   submitURL: 'https://minbrowser.org/',
   uploadToServer: false,

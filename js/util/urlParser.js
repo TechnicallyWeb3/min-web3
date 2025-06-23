@@ -5,6 +5,7 @@ const searchEngine = require('util/searchEngine.js')
 const hosts = require('./hosts.js')
 const httpsTopSites = require('../../ext/httpsUpgrade/httpsTopSites.json')
 const publicSuffixes = require('../../ext/publicSuffixes/public_suffix_list.json')
+const web3Suffixes = require('../../ext/publicSuffixes/web3_suffix_list.json')
 
 function removeWWW (domain) {
   return (domain.startsWith('www.') ? domain.slice(4) : domain)
@@ -16,11 +17,13 @@ function removeTrailingSlash (url) {
 var urlParser = {
   validIP4Regex: /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/i,
   validDomainRegex: /^(?!-)(?:.*@)*?([a-z0-9-._]+[a-z0-9]|\[[:a-f0-9]+\])/i,
+  validWeb3Regex: /^(0x[a-fA-F0-9]{40}|[^:\s]+:[^/\s]*|\S+\/\*|\S+\?\S*)$/,
+  validWeb3DomainRegex: new RegExp(`^(?!-)(?:.*@)*?[a-z0-9-._]+\\.(${web3Suffixes.map(s => s.replace('.', '')).join('|')})$`, 'i'),
   unicodeRegex: /[^\u0000-\u00ff]/,
-  removeProtocolRegex: /^(https?|file):\/\//i,
+  removeProtocolRegex: /^(https?|file|wttp):\/\//i,
   protocolRegex: /^[a-z0-9]+:\/\//, // URI schemes can be alphanum
   isURL: function (url) {
-    return urlParser.protocolRegex.test(url) || url.indexOf('about:') === 0 || url.indexOf('chrome:') === 0 || url.indexOf('data:') === 0
+    return urlParser.protocolRegex.test(url) || url.indexOf('about:') === 0 || url.indexOf('chrome:') === 0 || url.indexOf('data:') === 0 || url.indexOf('wttp:') === 0
   },
   isPossibleURL: function (url) {
     if (urlParser.isURL(url)) {
@@ -40,7 +43,7 @@ var urlParser = {
     }
 
     /*
-    Protocols removed: http:/https:/file:
+    Protocols removed: http:/https:/file:/wttp:
     chrome:, about:, data: protocols intentionally not removed
     */
     return url.replace(urlParser.removeProtocolRegex, '')
@@ -79,6 +82,22 @@ var urlParser = {
         }
       }
       return url
+    }
+
+    // need to check for ethereum addresses, should check in authority (between // and /)
+    if (urlParser.isURLMissingProtocol(url) && urlParser.isEthereumAddress(url)) {
+      console.log('URL Parser - Detected Ethereum address:', url)
+      const result = 'wttp://wallet/' + url
+      console.log('URL Parser - Converting to:', result)
+      return result
+    }
+
+    // need to check for web3 domains, should check in authority (between // and /)
+    if (urlParser.isURLMissingProtocol(url) && urlParser.isWeb3Domain(url)) {
+      console.log('URL Parser - Detected Web3 domain:', url)
+      const result = 'wttp://' + url
+      console.log('URL Parser - Converting to:', result)
+      return result
     }
 
     // if the url doesn't have any protocol and it's a valid domain
@@ -184,6 +203,13 @@ var urlParser = {
       }
     } catch (e) {}
     return url
+  },
+  isEthereumAddress: function (url) {
+    return urlParser.validWeb3Regex.test(url)
+  },
+  isWeb3Domain: function (url) {
+    const domain = urlParser.getDomain(url)
+    return urlParser.validWeb3DomainRegex.test(domain)
   }
 }
 
