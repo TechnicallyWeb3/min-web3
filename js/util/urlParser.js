@@ -86,18 +86,12 @@ var urlParser = {
 
     // need to check for ethereum addresses, should check in authority (between // and /)
     if (urlParser.isURLMissingProtocol(url) && urlParser.isEthereumAddress(url)) {
-      console.log('URL Parser - Detected Ethereum address:', url)
-      const result = 'wttp://wallet/' + url
-      console.log('URL Parser - Converting to:', result)
-      return result
+      return 'wttp://' + url
     }
 
     // need to check for web3 domains, should check in authority (between // and /)
     if (urlParser.isURLMissingProtocol(url) && urlParser.isWeb3Domain(url)) {
-      console.log('URL Parser - Detected Web3 domain:', url)
-      const result = 'wttp://' + url
-      console.log('URL Parser - Converting to:', result)
-      return result
+      return 'wttp://' + url
     }
 
     // if the url doesn't have any protocol and it's a valid domain
@@ -205,7 +199,20 @@ var urlParser = {
     return url
   },
   isEthereumAddress: function (url) {
-    return urlParser.validWeb3Regex.test(url)
+    // Extract the authority part of the URL (between optional // and before port/path)
+    let authority = url
+    
+    // Remove protocol if present (including //)
+    authority = authority.replace(/^[a-z0-9]+:\/\//i, '')
+    
+    // Remove user info if present (user:pass@)
+    authority = authority.replace(/^[^@]*@/, '')
+    
+    // Extract just the hostname part (before port or path)
+    authority = authority.split(/[/:?#]/)[0]
+    
+    // Check if this authority is a valid Ethereum address
+    return /^0x[a-fA-F0-9]{40}$/.test(authority)
   },
   isWeb3Domain: function (url) {
     const domain = urlParser.getDomain(url)

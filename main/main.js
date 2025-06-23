@@ -19,22 +19,19 @@ const {
   WebContentsView
 } = electron
 
-// Register wttp protocol scheme for Web3 support
-protocol.registerSchemesAsPrivileged([
-  {
-    scheme: 'wttp',
-    privileges: {
-      standard: true,
-      secure: true,
-      allowServiceWorkers: true,
-      supportFetchAPI: true,
-      corsEnabled: true,
-      stream: true,
-      bypassCSP: false,
-      displayIsolated: false
-    }
-  }
-])
+// // Register protocol schemes for Web3 support
+// protocol.registerSchemesAsPrivileged([
+//   {
+//     scheme: 'web3',
+//     privileges: {
+//       standard: true,
+//       secure: true,
+//       supportFetchAPI: true,
+//       corsEnabled: true,
+//       stream: true
+//     }
+//   }
+// ])
 
 // Initialize wttp protocol handlers (defined in wttpProtocol.js)
 initializeWttpProtocol()
@@ -235,7 +232,7 @@ function createWindowWithBounds (bounds, customArgs) {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
-      nodeIntegrationInWorker: true, // used by ProcessSpawner
+      nodeIntegrationInWorker: true,
       additionalArguments: [
         '--user-data-path=' + userDataPath,
         '--app-version=' + app.getVersion(),
