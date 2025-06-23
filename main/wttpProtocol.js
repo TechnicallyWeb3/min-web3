@@ -1,24 +1,4 @@
 // wttpProtocol.js - Web3 protocol handler
-// Register the wttp protocol scheme with privileges IMMEDIATELY
-// This must happen before app.ready and uses electron from main.js
-// try {
-//   // This will use the electron variable declared in main.js
-//   electron.protocol.registerSchemesAsPrivileged([
-//     {
-//       scheme: 'wttp',
-//       privileges: {
-//         standard: true,
-//         secure: true,
-//         allowServiceWorkers: true,
-//         supportFetchAPI: true,
-//         corsEnabled: true,
-//         stream: true
-//       }
-//     }
-//   ])
-// } catch (error) {
-//   console.error('Failed to register wttp protocol scheme:', error)
-// }
 
 // Initialize WTTP handler
 const { WTTPHandler } = require('@wttp/handler')
@@ -48,6 +28,28 @@ function registerWttpProtocol (ses) {
 // Function to initialize wttp protocol handlers after app/session are available
 function initializeWttpProtocol() {
   console.log('Initializing WTTP protocol handlers')
+  
+  // Register protocol schemes for Web3 support - MUST be before app.ready
+  // This is called from main.js before app.ready, so it's safe to do this here
+  try {
+    protocol.registerSchemesAsPrivileged([
+      {
+        scheme: 'wttp',
+        privileges: {
+          standard: true,
+          secure: true,
+          allowServiceWorkers: true,
+          supportFetchAPI: true,
+          corsEnabled: true,
+          stream: true,
+          bypassCSP: false
+        }
+      }
+    ])
+    console.log('WTTP protocol scheme registered with privileges')
+  } catch (error) {
+    console.error('Failed to register WTTP protocol scheme:', error)
+  }
   
   // Register wttp protocol for new sessions (not default)
   // Uses app and session variables from main.js

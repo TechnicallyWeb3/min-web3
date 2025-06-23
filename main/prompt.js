@@ -21,6 +21,7 @@ function createPrompt (options, callback) {
       nodeIntegration: false,
       sandbox: true,
       contextIsolation: true,
+      // experimentalFeatures: true,
       preload:  __dirname + '/pages/prompt/prompt.js'
     }
   })
