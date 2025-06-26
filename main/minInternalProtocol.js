@@ -25,7 +25,7 @@ protocol.registerSchemesAsPrivileged([
 		}
 	},
 	{
-		scheme: 'wttp',
+		scheme: 'webb',
 		privileges: {
 			standard: true,
 			secure: true,
