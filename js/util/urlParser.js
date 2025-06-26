@@ -71,6 +71,7 @@ var urlParser = {
     return !urlParser.protocolRegex.test(url);
   },
   parse:  function (url) {
+    console.log('[DEBUG][urlParser] Received URL for parsing:', url);
     url = url.trim(); // remove whitespace common on copy-pasted url's
 
     if (!url) {
@@ -111,6 +112,7 @@ var urlParser = {
     }
 
     if (url.startsWith('wttp://')) {
+      console.log('[DEBUG][urlParser] Detected wttp URL:', url);
       return 'wttp://' + url.slice(7)
     }
 

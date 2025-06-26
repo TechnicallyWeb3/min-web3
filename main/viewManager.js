@@ -52,7 +52,7 @@ function createView (existingViewId, id, webPreferences, boundsString, events) {
     view.setBackgroundColor('#fff')
     viewStateMap[id].loadedInitialURL = true
   } else {
-    view = new BrowserView({ webPreferences: viewPrefs })
+    view = new BrowserView({ upwebPreferences: viewPrefs })
   }
 
   events.forEach(function (event) {

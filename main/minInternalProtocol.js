@@ -2,9 +2,8 @@ const { pathToFileURL } = require('url')
 // const { getENSOwner } = require(path.join(__dirname, '..','min-web3', 'main', 'ensHelper'));
 // const { resolveUnstoppableDomain } = require(path.join(__dirname, '..','min-web3', 'main', 'unstoppableHelper'));
 
-
 const { WTTPHandler } = require('@wttp/handler');
-
+const mime = require('mime-types');
 
 protocol.registerSchemesAsPrivileged([
 	{
@@ -17,6 +16,16 @@ protocol.registerSchemesAsPrivileged([
 	},
 	{
 		scheme: 'web3',
+		privileges: {
+			standard: true,
+			secure: true,
+			supportFetchAPI: true,
+			corsEnabled: true,
+			stream: true
+		}
+	},
+	{
+		scheme: 'wttp',
 		privileges: {
 			standard: true,
 			secure: true,
@@ -64,98 +73,96 @@ function registerBundleProtocol(ses) {
 
 	ses.protocol.handle('wttp', async (req) => {
 
+		console.log('[DEBUG] Received wttp request:', req.url);
 		const wttp = new WTTPHandler();
-		console.log('Received web3 request:', req.url);
-		const url = new URL(req.url);
-		let contractAddress = url.hostname;
-		const path = url.pathname || '/';
-
-		console.log('Debug: Initial contract address or ENS:', contractAddress);
-
-		function isValidENS(domain) {
-			return /^([a-z0-9-]+\.)*[a-z0-9-]+\.eth$/i.test(domain);
+		let urlObj;
+		try {
+			urlObj = new URL(req.url);
+		} catch (e) {
+			console.error('[DEBUG] Invalid URL:', req.url, e);
+			return new Response('Invalid URL', { status: 400, headers: { 'content-type': 'text/plain' } });
 		}
+		let contractAddress = urlObj.hostname;
+		let requestedPath = urlObj.pathname || '/';
 
-		function isValidUnstoppableDomain(domain) {
+		// Normalize and sanitize the path
+		let safePath = path.posix.normalize(requestedPath);
+		if (safePath.startsWith('/')) safePath = safePath.slice(1);
 
-			const unstoppableTLDs = ['.crypto', '.zil', '.nft', '.blockchain', '.bitcoin', '.x', '.888', '.dao', '.wallet', 'unstoppable'];
-			return unstoppableTLDs.some(tld => domain.endsWith(tld));
-		}
-
+		console.log('[DEBUG] contractAddress:', contractAddress);
+		console.log('[DEBUG] requestedPath:', requestedPath);
+		console.log('[DEBUG] safePath:', safePath);
 
 		try {
-
-			console.log('Debug: Final contract address:', contractAddress);
-			console.log('Debug: Path:', path);
-
 			let content = "";
-			let contentType = ""
+			let contentType = "";
 
-			const res = await wttp.fetch(`wttp://${contractAddress}${path}`).then(async (response) => {
-				content =  response.body;
-				console.log('Content:', response.body);
+			console.log('[DEBUG] Fetching from WTTPHandler:', `wttp://${contractAddress}/${safePath}`);
+			const res = await wttp.fetch(`wttp://${contractAddress}/${safePath}`)
+				.then(async (response) => {
+					console.log('[DEBUG] WTTPHandler response status:', response.status);
+					if (response.body) {
+						console.log('[DEBUG] Buffer type:', typeof response.body);
+						console.log('[DEBUG] Buffer length:', response.body.length);
+						console.log('[DEBUG] Buffer preview (first 16 bytes):', Buffer.from(response.body).subarray(0, 16).toString('hex'));
+					}
 
+					if (response.status != 200) {
+						console.log('[DEBUG] Non-200 status:', response.status, response.statusText);
+						return response;
+					}
 
-				contentType = response.headers['Content-Type'] || response.headers['content-type'];
-				console.log("Content-Type:", contentType);
+					let buffer = response.body;
 
+					contentType = mime.lookup(safePath) || '';
+					if (!contentType && typeof buffer === 'string' && buffer.trim().startsWith('<!DOCTYPE html>')) {
+						contentType = 'text/html; charset=utf-8';
+					}
+					if (contentType.startsWith('text/')) {
+						contentType += '; charset=utf-8';
+					}
+					console.log('[DEBUG] Content Type:', contentType);
+
+					if (typeof buffer === 'string' && buffer.startsWith('0x')) {
+						buffer = Buffer.from(buffer.slice(2), 'hex');
+					} else if (buffer && typeof buffer === 'object' && !Buffer.isBuffer(buffer)) {
+						buffer = Buffer.from(Object.values(buffer));
+					}
+					if (contentType.startsWith('text/')) {
+						buffer = buffer.toString('utf8');
+					}
+					content = buffer;
+					return { content, contentType, status: response.status };
+				});
+
+			console.log('[DEBUG] Final fetch result:', {
+				status: res && res.status,
+				contentType: res && res.contentType,
+				contentLength: res && res.content ? (typeof res.content === 'string' ? res.content.length : (res.content.length || 0)) : 0
 			});
 
-			console.log(res)
-
-			console.log(content)
-
-			function isJSON(content) {
-				try {
-					JSON.parse(content);
-					return true; // It's a valid JSON
-				} catch (e) {
-					return false; // It's not a valid JSON
-				}
-			}
-
-
-
-			if (isJSON(content)) {
-				const ipfsData = JSON.parse(content);
-				console.log('Debug: IPFS link:', ipfsData.link);
-				console.log('Debug: IPFS content type:', ipfsData.type);
-
-				// Fetch the content from IPFS using a gateway
-				const ipfsResponse = await fetch(`${ipfsData.link}`);
-
-
-				// Check if the response is okay
-				if (!ipfsResponse.ok) {
-					throw new Error(`Error fetching IPFS content: ${ipfsResponse.statusText}`);
-				}
-
-				// Read the response as a Blob for binary data
-				const ipfsBlob = await ipfsResponse.blob();
-
-				return new Response(ipfsBlob, {
+			if (res && res.content) {
+				console.log('[DEBUG] Returning 200 response');
+				return new Response(res.content, {
 					status: 200,
-					headers: { 'content-type': ipfsData.type }
+					headers: { 'content-type': res.contentType }
 				});
-
-			}
-
-			if (content) {
-
-
-				return new Response(content, {
-					status: 200,
-					headers: { 'content-type': contentType }
+			} else if (res && res.status) {
+				console.log('[DEBUG] Returning error response with status:', res.status);
+				return new Response('Resource not found', {
+					status: res.status,
+					headers: { 'content-type': 'text/plain' }
 				});
 			} else {
+				console.log('[DEBUG] Returning generic 404');
 				return new Response('Resource not found', {
 					status: 404,
 					headers: { 'content-type': 'text/plain' }
 				});
 			}
 		} catch (error) {
-			console.error('Error processing request:', error);
-			return new Response(`Error: ${error.message}`, {
+			console.error('[DEBUG] Error processing request:', error);
+			return new Response(`[DEBUG] Error: ${error.message}`, {
 				status: 500,
 				headers: { 'content-type': 'text/plain' }
 			});
