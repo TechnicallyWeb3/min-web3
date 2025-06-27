@@ -11,10 +11,7 @@ function registerWttpProtocol (ses) {
     try {
       const response = await wttp.fetch(req.url)
       console.log('WTTP handler success, response status:', response.status)
-      return new Response(response.body, {
-        status: response.status,
-        headers: response.headers
-      })
+      return response
     } catch (error) {
       console.error('WTTP handler error:', error)
       return new Response(`Error: ${error.message}`, {
@@ -36,7 +33,7 @@ function initializeWttpProtocol() {
       {
         scheme: 'wttp',
         privileges: {
-          standard: true,
+          standard: false,
           secure: true,
           allowServiceWorkers: true,
           supportFetchAPI: true,
