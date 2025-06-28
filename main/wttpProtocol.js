@@ -9,7 +9,40 @@ function registerWttpProtocol (ses) {
   ses.protocol.handle('wttp', async (req) => {
     console.log('WTTP protocol handler called for URL:', req.url)
     try {
-      const response = await wttp.fetch(req.url)
+      const range = req.headers.get('range')
+      const rangeBytes = range ? {
+        start: range.split('-')[0].trim(),
+        end: range.split('-')[1].trim()
+      } : undefined
+      const response = await wttp.fetch(req.url, {
+        ifModifiedSince: req.headers.get('if-modified-since'),
+        ifNoneMatch: req.headers.get('if-none-match'),
+        rangeBytes: rangeBytes
+      })
+      console.log('WTTP handler success, response status:', response.status)
+      return response
+    } catch (error) {
+      console.error('WTTP handler error:', error)
+      return new Response(`Error: ${error.message}`, {
+        status: 500,
+        headers: { 'content-type': 'text/plain' }
+      })
+    }
+  })
+  ses.protocol.handle('web3', async (req) => {
+    console.log('WTTP protocol handler called for URL:', req.url)
+    try {
+      const range = req.headers.get('range')
+      const rangeBytes = range ? {
+        start: range.split('-')[0].trim(),
+        end: range.split('-')[1].trim()
+      } : undefined
+      const url = req.url.startsWith('web3:') ? req.url.replace('web3:', 'wttp:') : req.url
+      const response = await wttp.fetch(url, {
+        ifModifiedSince: req.headers.get('if-modified-since'),
+        ifNoneMatch: req.headers.get('if-none-match'),
+        rangeBytes: rangeBytes
+      })
       console.log('WTTP handler success, response status:', response.status)
       return response
     } catch (error) {
@@ -32,6 +65,20 @@ function initializeWttpProtocol() {
     protocol.registerSchemesAsPrivileged([
       {
         scheme: 'wttp',
+        privileges: {
+          standard: true,
+          secure: true,
+          allowServiceWorkers: true,
+          supportFetchAPI: true,
+          corsEnabled: true,
+          stream: true,
+          bypassCSP: false
+        }
+      }
+    ])
+    protocol.registerSchemesAsPrivileged([
+      {
+        scheme: 'web3',
         privileges: {
           standard: false,
           secure: true,

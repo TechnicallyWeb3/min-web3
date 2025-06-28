@@ -1,5 +1,6 @@
 const punycode = require('punycode')
 const path = require('path')
+const wURL = require('@wttp/handler')
 
 const searchEngine = require('util/searchEngine.js')
 const hosts = require('./hosts.js')
@@ -86,7 +87,9 @@ var urlParser = {
 
     // need to check for ethereum addresses, should check in authority (between // and /)
     if (urlParser.isURLMissingProtocol(url) && urlParser.isEthereumAddress(url)) {
-      return 'wttp://' + url
+      const wurl = new wURL(url)
+      wurl.hostname = wurl.hostname.endsWith('.tw3') ? wurl.hostname : wurl.hostname + '.tw3'
+      return 'wttp://' + wurl.toString()
     }
 
     // need to check for web3 domains, should check in authority (between // and /)
