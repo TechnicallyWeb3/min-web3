@@ -5,6 +5,11 @@ const { pathToFileURL } = require('url')
 const { WTTPHandler } = require('@wttp/handler');
 const mime = require('mime-types');
 
+// Helper: Return a simple HTML error page
+function getErrorPage(siteAddress) {
+	return `<html><body><h1>404 Not Found</h1><p>Site: ${siteAddress}</p></body></html>`;
+}
+
 // Helper: Validate Ethereum address
 function isValidEthAddress(addr) {
 	return /^0x[a-fA-F0-9]{40}$/.test(addr);
@@ -97,7 +102,7 @@ function registerBundleProtocol(ses) {
 	ses.protocol.handle('wttp', async (req) => {
 		try {
 			const urlObj = new URL(req.url);
-			// const sessionId = getSessionId(ses);
+			const sessionId = getSessionId(ses);
 
 			let siteAddress = getSiteAddressFromUrl(urlObj);
 			let filePath = getFilePathFromUrl(urlObj);
@@ -116,92 +121,80 @@ function registerBundleProtocol(ses) {
 				});
 			}
 
-			console.log('[DEBUG] Received wttp request:', req.url);
-			const wttp = new WTTPHandler();
-			let requestedPath = urlObj.pathname || '/';
+			// If the hostname is a valid ETH/ENS, treat as root or file request
+			if (isValidEthAddress(siteAddress) || isValidEnsName(siteAddress)) {
+				// If no file path, default to index.html
+				if (!filePath || filePath === '') filePath = 'index.html';
 
-			// Normalize and sanitize the path
-			let safePath = path.posix.normalize(requestedPath);
-			if (safePath.startsWith('/')) safePath = safePath.slice(1);
+				// Remember this as the current site for this session
+				// sessionCurrentSite.set(sessionId, siteAddress);
 
-			console.log('[DEBUG] contractAddress:', siteAddress);
-			console.log('[DEBUG] requestedPath:', requestedPath);
-			console.log('[DEBUG] safePath:', safePath);
+				const wttpUrl = `wttp://${siteAddress}/${filePath}`;
+				const result = await handleWttpFetch(wttpUrl, filePath);
 
-			let content = "";
-			let contentType = "";
+				if (result.status !== 200) {
+					return new Response(getErrorPage(siteAddress), {
+						status: 404,
+						headers: { 'content-type': 'text/html' }
+					});
+				}
 
-			console.log('[DEBUG] Fetching from WTTPHandler:', `wttp://${siteAddress}/${safePath}`);
-			const res = await wttp.fetch(`wttp://${siteAddress}/${safePath}`)
-				.then(async (response) => {
-					console.log('[DEBUG] WTTPHandler response status:', response.status);
-					if (response.body) {
-						console.log('[DEBUG] Buffer type:', typeof response.body);
-						console.log('[DEBUG] Buffer length:', response.body.length);
-						console.log('[DEBUG] Buffer preview (first 16 bytes):', Buffer.from(response.body).subarray(0, 16).toString('hex'));
-					}
-
-					if (response.status != 200) {
-						console.log('[DEBUG] Non-200 status:', response.status, response.statusText);
-						return response;
-					}
-
-					let buffer = response.body;
-
-					contentType = mime.lookup(safePath) || '';
-					if (!contentType && typeof buffer === 'string' && buffer.trim().startsWith('<!DOCTYPE html>')) {
-						contentType = 'text/html; charset=utf-8';
-					}
-					if (contentType.startsWith('text/')) {
-						contentType += '; charset=utf-8';
-					}
-					console.log('[DEBUG] Content Type:', contentType);
-
-					if (typeof buffer === 'string' && buffer.startsWith('0x')) {
-						buffer = Buffer.from(buffer.slice(2), 'hex');
-					} else if (buffer && typeof buffer === 'object' && !Buffer.isBuffer(buffer)) {
-						buffer = Buffer.from(Object.values(buffer));
-					}
-					if (contentType.startsWith('text/')) {
-						buffer = buffer.toString('utf8');
-					}
-					content = buffer;
-					return { content, contentType, status: response.status };
-				});
-
-			console.log('[DEBUG] Final fetch result:', {
-				status: res && res.status,
-				contentType: res && res.contentType,
-				contentLength: res && res.content ? (typeof res.content === 'string' ? res.content.length : (res.content.length || 0)) : 0
-			});
-
-			if (res && res.content) {
-				console.log('[DEBUG] Returning 200 response');
-				return new Response(res.content, {
+				let responseBody = result.buffer;
+				if (result.contentType && result.contentType.startsWith('text/') && Buffer.isBuffer(responseBody)) {
+					responseBody = responseBody.toString('utf8');
+				}
+				console.log('[DEBUG] About to send response. Content-Type:', result.contentType, 'Type of buffer:', typeof responseBody, 'Is Buffer:', Buffer.isBuffer(responseBody));
+				if (typeof responseBody === 'string') {
+					console.log('[DEBUG] First 200 chars of string:', responseBody.substring(0, 200));
+				} else if (Buffer.isBuffer(responseBody)) {
+					console.log('[DEBUG] First 32 bytes of buffer:', responseBody.slice(0, 32));
+				}
+				return new Response(responseBody, {
 					status: 200,
-					headers: { 'content-type': res.contentType }
-				});
-			} else if (res && res.status) {
-				console.log('[DEBUG] Returning error response with status:', res.status);
-				return new Response('Resource not found', {
-					status: res.status,
-					headers: { 'content-type': 'text/plain' }
-				});
-			} else {
-				console.log('[DEBUG] Returning generic 404');
-				return new Response('Resource not found', {
-					status: 404,
-					headers: { 'content-type': 'text/plain' }
+					headers: {
+						'content-type': result.contentType,
+						'Cache-Control': 'no-cache, no-store, must-revalidate',
+						'Pragma': 'no-cache',
+						'Expires': '0'
+					}
 				});
 			}
-		} catch (error) {
-			console.error('[DEBUG] Error processing request:', error);
-			return new Response(`[DEBUG] Error: ${error.message}`, {
+
+			// If not a valid site address, treat as a relative path
+			const originalSite = sessionCurrentSite.get(sessionId) || 'wordl3.eth';
+			let fullPath = urlObj.pathname;
+			if (fullPath.startsWith('/')) fullPath = fullPath.slice(1);
+			const wttpUrl = `wttp://${originalSite}/${fullPath}`;
+			const result = await handleWttpFetch(wttpUrl, fullPath);
+
+			if (result.status !== 200) {
+				return new Response(getErrorPage(originalSite), {
+					status: 404,
+					headers: { 'content-type': 'text/html' }
+				});
+			}
+
+			let responseBody = result.buffer;
+			if (result.contentType && result.contentType.startsWith('text/') && Buffer.isBuffer(responseBody)) {
+				responseBody = responseBody.toString('utf8');
+			}
+			return new Response(responseBody, {
+				status: 200,
+				headers: {
+					'content-type': result.contentType,
+					'Cache-Control': 'no-cache, no-store, must-revalidate',
+					'Pragma': 'no-cache',
+					'Expires': '0'
+				}
+			});
+		} catch (err) {
+			console.error('[WTTP PROTOCOL ERROR]', err);
+			return new Response('Internal WTTP Protocol Error', {
 				status: 500,
 				headers: { 'content-type': 'text/plain' }
 			});
 		}
-	})
+	});
 }
 
 app.on('session-created', (ses) => {
@@ -209,3 +202,114 @@ app.on('session-created', (ses) => {
 		registerBundleProtocol(ses)
 	}
 })
+
+async function handleWttpFetch(wttpUrl, filePath) {
+	const wttp = new WTTPHandler();
+	const response = await wttp.fetch(wttpUrl);
+
+	if (response.status !== 200) {
+		return {
+			status: response.status,
+			statusText: response.statusText,
+			contentType: 'text/plain',
+			buffer: Buffer.from(`WTTP Error: ${response.statusText || response.status}`)
+		};
+	}
+
+	// Robust Content-Type detection from your provided logic
+	let contentType = null;
+	if (response.headers && response.headers.get) {
+		contentType = response.headers.get('content-type') || response.headers.get('Content-Type');
+	} else if (response.headers && response.headers['content-type']) {
+		contentType = response.headers['content-type'] || response.headers['Content-Type'];
+	}
+	if (!contentType && response.headers && response.headers[Symbol.for('headers map')]) {
+		const headersMap = response.headers[Symbol.for('headers map')];
+		const contentTypeHeader = headersMap.get('content-type');
+		if (contentTypeHeader && contentTypeHeader.value) {
+			contentType = contentTypeHeader.value;
+		}
+	}
+
+	// Fallback: guess content type based on file extension
+	if (!contentType) {
+		const extension = filePath ? filePath.split('.').pop()?.toLowerCase() : '';
+		contentType = mime.lookup(extension) || 'application/octet-stream';
+	}
+
+	// Fix content type format - ensure proper charset or remove empty charset
+	if (contentType && contentType.includes('charset=')) {
+		const parts = contentType.split(';');
+		const mainType = parts[0].trim();
+		const charsetPart = parts.find(part => part.trim().startsWith('charset='));
+		const charsetValue = charsetPart ? charsetPart.split('=')[1]?.trim() : '';
+		if (charsetValue) {
+			contentType = `${mainType}; charset=${charsetValue}`;
+		} else {
+			contentType = mainType.startsWith('text/') ? `${mainType}; charset=utf-8` : mainType;
+		}
+	} else if (contentType && contentType.startsWith('text/') && !contentType.includes('charset=')) {
+		contentType = `${contentType}; charset=utf-8`;
+	}
+
+	if (!contentType) {
+		contentType = 'text/html; charset=utf-8';
+	}
+	console.log('Content Type:', contentType);
+
+	// Robust body extraction for both stream and non-stream bodies
+	let buffer;
+	if (response.body && typeof response.body[Symbol.asyncIterator] === 'function') {
+		// Manually read the response body as a stream
+		const chunks = [];
+		for await (const chunk of response.body) {
+			chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+		}
+		buffer = Buffer.concat(chunks);
+
+		if (contentType && contentType.startsWith('text/')) {
+			const text = buffer.toString('utf8');
+			console.log('[DEBUG] Text content extracted manually, length:', text.length);
+			buffer = text; // If you still want `buffer` to be the string
+		} else {
+			console.log('[DEBUG] Binary content extracted manually, length:', buffer.length);
+		}
+	} else {
+		// Fallback for non-stream bodies (Buffer, string, array, etc.)
+		console.log('[DEBUG] typeof response.body:', typeof response.body, 'isBuffer:', Buffer.isBuffer(response.body), 'isArray:', Array.isArray(response.body), 'value:', response.body);
+		if (contentType && contentType.startsWith('text/')) {
+			if (typeof response.body === 'string') {
+				buffer = response.body;
+			} else if (Buffer.isBuffer(response.body)) {
+				buffer = response.body.toString('utf8');
+			} else if (Array.isArray(response.body)) {
+				buffer = Buffer.from(response.body).toString('utf8');
+			} else if (response.body instanceof Uint8Array) {
+				buffer = Buffer.from(response.body).toString('utf8');
+			} else {
+				buffer = '';
+			}
+			console.log('[DEBUG] Text content extracted fallback, length:', buffer.length);
+		} else {
+			if (Buffer.isBuffer(response.body)) {
+				buffer = response.body;
+			} else if (Array.isArray(response.body)) {
+				buffer = Buffer.from(response.body);
+			} else if (typeof response.body === 'string') {
+				buffer = Buffer.from(response.body, 'utf8');
+			} else if (response.body instanceof Uint8Array) {
+				buffer = Buffer.from(response.body);
+			} else {
+				buffer = Buffer.from([]);
+			}
+			console.log('[DEBUG] Binary content extracted fallback, length:', buffer.length);
+		}
+	}
+
+	return {
+		status: response.status,
+		statusText: response.statusText,
+		contentType,
+		buffer: buffer
+	};
+}
