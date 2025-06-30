@@ -1,6 +1,5 @@
 const punycode = require('punycode')
 const path = require('path')
-const wURL = require('@wttp/handler')
 
 const searchEngine = require('util/searchEngine.js')
 const hosts = require('./hosts.js')
@@ -87,13 +86,13 @@ var urlParser = {
 
     // need to check for ethereum addresses, should check in authority (between // and /)
     if (urlParser.isURLMissingProtocol(url) && urlParser.isEthereumAddress(url)) {
-      const wurl = new wURL(url)
-      wurl.hostname = wurl.hostname.endsWith('.tw3') ? wurl.hostname : wurl.hostname + '.tw3'
-      return 'wttp://' + wurl.toString()
+      console.log(urlParser.parseWeb3Url(url).url)
+      return 'wttp://' + urlParser.parseWeb3Url(url).url
     }
 
     // need to check for web3 domains, should check in authority (between // and /)
     if (urlParser.isURLMissingProtocol(url) && urlParser.isWeb3Domain(url)) {
+      console.log(url)
       return 'wttp://' + url
     }
 
@@ -214,8 +213,36 @@ var urlParser = {
     // Extract just the hostname part (before port or path)
     authority = authority.split(/[/:?#]/)[0]
     
-    // Check if this authority is a valid Ethereum address
+    // Check if this hostname is a valid Ethereum address
     return /^0x[a-fA-F0-9]{40}$/.test(authority)
+  },
+  parseWeb3Url: function (url) {
+        // Extract the authority part of the URL (between optional // and before port/path)
+        let authority = url
+    
+        // Remove protocol if present (including //)
+        authority = authority.replace(/^[a-z0-9]+:\/\//i, '')
+        const protocol = url.split(authority)[0]
+        
+        // Remove user info if present (user:pass@)
+        const noUserInfo = authority.replace(/^[^@]*@/, '')
+        const userInfo = authority.split(noUserInfo)[0]
+        
+        // Extract just the hostname part (before port or path)
+        let hostname = authority.split(/[/:?#]/)[0]
+        const port = authority.split(hostname)[0]
+        const originalHostname = port ? hostname + ':' + port : hostname
+
+        if (urlParser.isEthereumAddress(hostname)) {
+          hostname = hostname.endsWith('.contractaddress0x') ? hostname : hostname + '.contractaddress0x'
+        }
+
+        const replaceHostname = port ? hostname + ':' + port : hostname
+
+        url = url.replace(originalHostname, replaceHostname)
+        
+        return { protocol, userInfo, hostname, port, url }
+    
   },
   isWeb3Domain: function (url) {
     const domain = urlParser.getDomain(url)
