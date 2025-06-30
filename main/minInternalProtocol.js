@@ -5,6 +5,29 @@ const { pathToFileURL } = require('url')
 const { WTTPHandler } = require('@wttp/handler');
 const mime = require('mime-types');
 
+// Helper: Validate Ethereum address
+function isValidEthAddress(addr) {
+	return /^0x[a-fA-F0-9]{40}$/.test(addr);
+}
+// Helper: Validate ENS name
+function isValidEnsName(addr) {
+	return /\.eth$/.test(addr);
+}
+// Helper: Get session ID
+function getSessionId(ses) {
+	return ses && ses.id ? ses.id : 'default';
+}
+// Helper: Get site address from URL object
+function getSiteAddressFromUrl(urlObj) {
+	return urlObj.hostname;
+}
+// Helper: Get file path from URL object
+function getFilePathFromUrl(urlObj) {
+	let filePath = urlObj.pathname || '';
+	if (filePath.startsWith('/')) filePath = filePath.slice(1);
+	return filePath;
+}
+
 protocol.registerSchemesAsPrivileged([
 	{
 		scheme: 'min',
@@ -72,33 +95,44 @@ function registerBundleProtocol(ses) {
 	})
 
 	ses.protocol.handle('wttp', async (req) => {
-
-		console.log('[DEBUG] Received wttp request:', req.url);
-		const wttp = new WTTPHandler();
-		let urlObj;
 		try {
-			urlObj = new URL(req.url);
-		} catch (e) {
-			console.error('[DEBUG] Invalid URL:', req.url, e);
-			return new Response('Invalid URL', { status: 400, headers: { 'content-type': 'text/plain' } });
-		}
-		let contractAddress = urlObj.hostname;
-		let requestedPath = urlObj.pathname || '/';
+			const urlObj = new URL(req.url);
+			// const sessionId = getSessionId(ses);
 
-		// Normalize and sanitize the path
-		let safePath = path.posix.normalize(requestedPath);
-		if (safePath.startsWith('/')) safePath = safePath.slice(1);
+			let siteAddress = getSiteAddressFromUrl(urlObj);
+			let filePath = getFilePathFromUrl(urlObj);
 
-		console.log('[DEBUG] contractAddress:', contractAddress);
-		console.log('[DEBUG] requestedPath:', requestedPath);
-		console.log('[DEBUG] safePath:', safePath);
+			// REDIRECT: If root directory request without trailing slash, redirect to slash version
+			if (
+				(isValidEthAddress(siteAddress) || isValidEnsName(siteAddress)) &&
+				(!filePath || filePath === '' || filePath === 'index.html') &&
+				!req.url.endsWith('/')
+			) {
+				let redirectUrl = req.url + '/';
+				redirectUrl = redirectUrl.replace(/([^:])\/\//g, '$1/');
+				return new Response('', {
+					status: 301,
+					headers: { 'Location': redirectUrl }
+				});
+			}
 
-		try {
+			console.log('[DEBUG] Received wttp request:', req.url);
+			const wttp = new WTTPHandler();
+			let requestedPath = urlObj.pathname || '/';
+
+			// Normalize and sanitize the path
+			let safePath = path.posix.normalize(requestedPath);
+			if (safePath.startsWith('/')) safePath = safePath.slice(1);
+
+			console.log('[DEBUG] contractAddress:', siteAddress);
+			console.log('[DEBUG] requestedPath:', requestedPath);
+			console.log('[DEBUG] safePath:', safePath);
+
 			let content = "";
 			let contentType = "";
 
-			console.log('[DEBUG] Fetching from WTTPHandler:', `wttp://${contractAddress}/${safePath}`);
-			const res = await wttp.fetch(`wttp://${contractAddress}/${safePath}`)
+			console.log('[DEBUG] Fetching from WTTPHandler:', `wttp://${siteAddress}/${safePath}`);
+			const res = await wttp.fetch(`wttp://${siteAddress}/${safePath}`)
 				.then(async (response) => {
 					console.log('[DEBUG] WTTPHandler response status:', response.status);
 					if (response.body) {
