@@ -33,7 +33,7 @@ function initializeWttpProtocol() {
       {
         scheme: 'wttp',
         privileges: {
-          standard: false,
+          standard: true,
           secure: true,
           allowServiceWorkers: true,
           supportFetchAPI: true,
