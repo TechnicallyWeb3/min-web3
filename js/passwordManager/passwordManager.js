@@ -1,3 +1,4 @@
+
 const { ipcRenderer } = require('electron')
 
 const settings = require('util/settings/settings.js')

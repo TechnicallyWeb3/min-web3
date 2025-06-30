@@ -53,7 +53,7 @@ protocol.registerSchemesAsPrivileged([
 		}
 	},
 	{
-		scheme: 'webb',
+		scheme: 'wttp',
 		privileges: {
 			standard: true,
 			secure: true,
