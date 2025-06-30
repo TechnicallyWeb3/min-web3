@@ -1,4 +1,5 @@
 var urlParser = require('util/urlParser.js')
+const { toInternalWttpUrl } = require('util/urlParser.js');
 var settings = require('util/settings/settings.js')
 
 /* implements selecting webviews, switching between them, and creating new ones. */
@@ -217,10 +218,11 @@ const webviews = {
 
     if (!existingViewId) {
       if (tabData.url) {
-        ipc.send('loadURLInView', { id: tabData.id, url: urlParser.parse(tabData.url) })
+        let url = toInternalWttpUrl(tabData.url);
+        console.log('[DEBUG] About to load URL in view (add):', url);
+        ipc.send('loadURLInView', { id: tabData.id, url: urlParser.parse(url) });
       } else if (tabData.private) {
-        // workaround for https://github.com/minbrowser/min/issues/872
-        ipc.send('loadURLInView', { id: tabData.id, url: urlParser.parse('min://newtab') })
+        ipc.send('loadURLInView', { id: tabData.id, url: urlParser.parse('min://newtab') });
       }
     }
 
@@ -251,8 +253,10 @@ const webviews = {
     })
     webviews.emitEvent('view-shown', id)
   },
-  update: function (id, url) {
-    ipc.send('loadURLInView', { id: id, url: urlParser.parse(url) })
+  update: function (tabId, url) {
+    let internalUrl = toInternalWttpUrl(url);
+    console.log('[DEBUG] About to load URL in view (update):', internalUrl);
+    ipc.send('loadURLInView', { id: tabId, url: urlParser.parse(internalUrl) });
   },
   destroy: function (id) {
     webviews.emitEvent('view-hidden', id)
@@ -428,7 +432,10 @@ ipc.on('leave-full-screen', function () {
 webviews.bindEvent('did-start-navigation', onNavigate)
 webviews.bindEvent('will-redirect', onNavigate)
 webviews.bindEvent('did-navigate', function (tabId, url, httpResponseCode, httpStatusText) {
-  onPageURLChange(tabId, url)
+  // If this is an internal WTTP URL, rewrite to pretty for display
+  let prettyUrl = typeof toPrettyWttpUrl === 'function' ? toPrettyWttpUrl(url) : url;
+  tabs.update(tabId, { url: prettyUrl });
+  onPageURLChange(tabId, prettyUrl);
 })
 
 webviews.bindEvent('did-finish-load', onPageLoad)

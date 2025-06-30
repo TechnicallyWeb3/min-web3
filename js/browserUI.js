@@ -291,7 +291,8 @@ document.addEventListener('DOMContentLoaded', function () {
   function updateAddressBar() {
     const tab = tabs.get(tabs.getSelected());
     if (!tab) return;
-    addressBar.value = tab.url || '';
+    // Prefer prettyUrl if available
+    addressBar.value = tab.prettyUrl || tab.url || '';
     // Optionally update security icon (locked/unlocked)
     if (tab.secure === false) {
       securityIcon.className = 'i carbon:unlocked';
@@ -313,8 +314,17 @@ document.addEventListener('DOMContentLoaded', function () {
   // On Enter in address bar, navigate current tab
   addressBar.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') {
-      const url = urlParser.parse(addressBar.value.trim())
-      webviews.update(tabs.getSelected(), url)
+      let prettyUrl = addressBar.value.trim();
+
+      // If user entered just an ETH address or ENS name, rewrite to wttp://<address>/
+      if (/^0x[a-fA-F0-9]{40}$/.test(prettyUrl) || /\.eth$/.test(prettyUrl)) {
+        prettyUrl = `wttp://${prettyUrl}/`;
+      }
+
+      let internalUrl = toInternalWttpUrl(prettyUrl);
+      webviews.update(tabs.getSelected(), internalUrl);
+      // Store the pretty URL for this tab
+      tabs.update(tabs.getSelected(), { prettyUrl: prettyUrl });
     }
   });
 
@@ -364,6 +374,30 @@ window.addEventListener('load', function () {
     }, 100);
   }
 });
+
+// Helper: Convert pretty WTTP URL to internal format
+function toInternalWttpUrl(url) {
+  const match = url.match(/^wttp:\/\/([0-9a-zA-Z.]+)(\/.*)?$/);
+  if (match) {
+    const host = match[1];
+    const path = match[2] || '/';
+    if (/^0x[a-fA-F0-9]{40}$/.test(host) || /\.eth$/.test(host)) {
+      return `wttp://ca/${host}${path}`;
+    }
+  }
+  return url;
+}
+
+// Helper: Convert internal WTTP URL to pretty format
+function toPrettyWttpUrl(url) {
+  const match = url.match(/^wttp:\/\/ca\/([0-9a-zA-Z.]+)(\/.*)?$/);
+  if (match) {
+    const address = match[1];
+    const path = match[2] || '/';
+    return `wttp://${address}${path}`;
+  }
+  return url;
+}
 
 module.exports = {
   addTask,

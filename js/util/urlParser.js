@@ -223,4 +223,35 @@ var urlParser = {
   }
 };
 
+function toInternalWttpUrl(url) {
+  if (url.startsWith('wttp://')) {
+    console.log('[DEBUG][toInternalWttpUrl] Input:', url);
+  }
+  // If url is just an ETH address, make it a full WTTP URL
+  if (/^0x[a-fA-F0-9]{40}$/.test(url)) {
+    url = `wttp://${url}/`;
+  }
+  const match = url.match(/^wttp:\/\/([0-9a-zA-Z.]+)(\/.*)?$/);
+  if (match) {
+    const host = match[1];
+    const path = match[2] || '/';
+    if (/^0x[a-fA-F0-9]{40}$/.test(host) || /\.eth$/.test(host)) {
+      return `wttp://ca/${host}${path}`;
+    }
+  }
+  return url;
+}
+
+function toPrettyWttpUrl(url) {
+  const match = url.match(/^wttp:\/\/ca\/([0-9a-zA-Z.]+)(\/.*)?$/);
+  if (match) {
+    const address = match[1];
+    const path = match[2] || '/';
+    return `wttp://${address}${path}`;
+  }
+  return url;
+}
+
 module.exports = urlParser;
+module.exports.toInternalWttpUrl = toInternalWttpUrl;
+module.exports.toPrettyWttpUrl = toPrettyWttpUrl;
