@@ -31,7 +31,7 @@
   "dependencies": {
     "@browsermt/bergamot-translator": "^0.4.9",
     "@electron/fuses": "^1.7.0",
-    "@wttp/handler": "^0.2.0",
+    "@wttp/handler": "^0.2.2",
     "chokidar": "^3.6.0",
     "dexie": "^3.0.3",
     "dragula": "github:minbrowser/dragula",
