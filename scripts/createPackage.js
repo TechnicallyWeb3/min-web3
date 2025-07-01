@@ -63,6 +63,18 @@ module.exports = function (platform, extraOptions) {
       version: FuseVersion.V1,
       [FuseV1Options.GrantFileProtocolExtraPrivileges]: false
     })
+
+    // Copy WTTP license to all builds
+    const fs = require('fs')
+    const wttpLicenseSrc = path.join(__dirname, '..', 'node_modules', '@wttp', 'core', 'LICENSE')
+    const wttpLicenseDest = path.join(context.appOutDir, 'LICENSE.wttp.txt')
+    
+    if (fs.existsSync(wttpLicenseSrc)) {
+      fs.copyFileSync(wttpLicenseSrc, wttpLicenseDest)
+      console.log('✓ Copied WTTP license to build')
+    } else {
+      console.warn('⚠ WTTP license not found at:', wttpLicenseSrc)
+    }
   }
 
   const options = {

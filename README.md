@@ -15,6 +15,12 @@ Download Min from the [releases page](https://github.com/minbrowser/min/releases
 [![Downloads][DownloadsBadge]][DownloadsUrl]
 [![Discord][DiscordBadge]][DiscordUrl]
 
+## WTTP Credits
+
+**Enhanced by Technically Web3 (TW3) Team**
+
+This version of Min includes the addition of the Web3 Transfer Protocol (WTTP) by the [Technically Web3 (TW3) team](https://technicallyWeb3.com). Any redistribution using the WTTP must include this attribution.
+
 Min is made possible by these sponsors:
 
 | [<img src="https://avatars.githubusercontent.com/u/6592155?v=4" width="40">](https://github.com/blackgwe) | [<img src="https://avatars.githubusercontent.com/u/49724477?v=4" width="40">](https://github.com/rafel-ioli) |[<img src="https://avatars.githubusercontent.com/u/237596?v=4" width="40">](https://github.com/idoru) |     |
