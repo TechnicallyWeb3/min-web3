@@ -48,6 +48,8 @@ async function afterPackageBuilt (packagePath) {
   console.log('Creating package (this may take a while)')
 
   fs.copyFileSync('LICENSE.txt', packagePath + '/LICENSE')
+  // copy wttp license
+  fs.copyFileSync('node_modules/@wttp/core/LICENSE', packagePath + '/LICENSE.wttp.txt')
 
   await installer(options)
     .then(function () {

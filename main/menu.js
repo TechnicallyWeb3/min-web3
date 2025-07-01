@@ -431,7 +431,12 @@ function buildAppMenu (options = {}) {
           click: function (item, window) {
             var info = [
               'Min v' + app.getVersion(),
-              'Chromium v' + process.versions.chrome
+              'Chromium v' + process.versions.chrome,
+              '',
+              'Enhanced by Technically Web3 (TW3) Team',
+              '',
+              'This software includes the Web3 Transfer Protocol (WTTP)',
+              'by the Technically Web3 (TW3) team.'
             ]
             electron.dialog.showMessageBox({
               type: 'info',
