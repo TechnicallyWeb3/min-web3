@@ -138,20 +138,32 @@ function registerBundleProtocol(ses) {
 				// If no file path, default to index.html
 				if (!filePath || filePath === '') filePath = 'index.html';
 
-				// Remember this as the current site for this session
-				// sessionCurrentSite.set(sessionId, siteAddress);
-
 				const wttpUrl = `wttp://${siteAddress}/${filePath}`;
-				const result = await handleWttpFetch(wttpUrl, filePath);
+				const wttpResult = await (new WTTPHandler()).fetch(wttpUrl);
+				console.log('[DEBUG] WTTP fetch response:', wttpResult, 'Type:', typeof wttpResult);
 
-				if (result.status !== 200) {
+				if (!wttpResult || typeof wttpResult !== 'object') {
+					console.error('[WTTP PROTOCOL ERROR] Invalid response object from WTTPHandler');
+					return new Response('Internal WTTP Protocol Error (invalid response)', {
+						status: 500,
+						headers: { 'content-type': 'text/plain' }
+					});
+				}
+
+				const headers = new Headers(wttpResult.headers);
+				const response = new Response(wttpResult.body, {
+					status: wttpResult.status,
+					headers
+				});
+
+				if (response.status !== 200) {
 					// Show a custom error page for contract/internal errors
 					let status = 404;
 					let contentType = 'text/html';
 					let errorHtml = getErrorPage(siteAddress);
-					if (result.errorType === 'revert' || result.errorType === 'internal') {
+					if (response.status >= 500) {
 						status = 500;
-						errorHtml = `<html><body><h1>WTTP Error</h1><pre>${result.errorMessage || 'Unknown error'}</pre></body></html>`;
+						errorHtml = `<html><body><h1>WTTP Error</h1><pre>${response.statusText || 'Unknown error'}</pre></body></html>`;
 					}
 					return new Response(errorHtml, {
 						status,
@@ -159,25 +171,8 @@ function registerBundleProtocol(ses) {
 					});
 				}
 
-				let responseBody = result.buffer;
-				if (result.contentType && result.contentType.startsWith('text/') && Buffer.isBuffer(responseBody)) {
-					responseBody = responseBody.toString('utf8');
-				}
-				console.log('[DEBUG] About to send response. Content-Type:', result.contentType, 'Type of buffer:', typeof responseBody, 'Is Buffer:', Buffer.isBuffer(responseBody));
-				if (typeof responseBody === 'string') {
-					console.log('[DEBUG] First 200 chars of string:', responseBody.substring(0, 200));
-				} else if (Buffer.isBuffer(responseBody)) {
-					console.log('[DEBUG] First 32 bytes of buffer:', responseBody.slice(0, 32));
-				}
-				return new Response(responseBody, {
-					status: 200,
-					headers: {
-						'content-type': result.contentType,
-						'Cache-Control': 'no-cache, no-store, must-revalidate',
-						'Pragma': 'no-cache',
-						'Expires': '0'
-					}
-				});
+				// Return the response directly for successful fetches
+				return response;
 			}
 
 			// If not a valid site address, treat as a relative path
@@ -185,16 +180,31 @@ function registerBundleProtocol(ses) {
 			let fullPath = urlObj.pathname;
 			if (fullPath.startsWith('/')) fullPath = fullPath.slice(1);
 			const wttpUrl = `wttp://${originalSite}/${fullPath}`;
-			const result = await handleWttpFetch(wttpUrl, fullPath);
+			const wttpResult = await (new WTTPHandler()).fetch(wttpUrl);
+			console.log('[DEBUG] WTTP fetch response:', wttpResult, 'Type:', typeof wttpResult);
 
-			if (result.status !== 200) {
+			if (!wttpResult || typeof wttpResult !== 'object') {
+				console.error('[WTTP PROTOCOL ERROR] Invalid response object from WTTPHandler');
+				return new Response('Internal WTTP Protocol Error (invalid response)', {
+					status: 500,
+					headers: { 'content-type': 'text/plain' }
+				});
+			}
+
+			const headers = new Headers(wttpResult.headers);
+			const response = new Response(wttpResult.body, {
+				status: wttpResult.status,
+				headers
+			});
+
+			if (response.status !== 200) {
 				// Show a custom error page for contract/internal errors
 				let status = 404;
 				let contentType = 'text/html';
 				let errorHtml = getErrorPage(originalSite);
-				if (result.errorType === 'revert' || result.errorType === 'internal') {
+				if (response.status >= 500) {
 					status = 500;
-					errorHtml = `<html><body><h1>WTTP Error</h1><pre>${result.errorMessage || 'Unknown error'}</pre></body></html>`;
+					errorHtml = `<html><body><h1>WTTP Error</h1><pre>${response.statusText || 'Unknown error'}</pre></body></html>`;
 				}
 				return new Response(errorHtml, {
 					status,
@@ -202,19 +212,8 @@ function registerBundleProtocol(ses) {
 				});
 			}
 
-			let responseBody = result.buffer;
-			if (result.contentType && result.contentType.startsWith('text/') && Buffer.isBuffer(responseBody)) {
-				responseBody = responseBody.toString('utf8');
-			}
-			return new Response(responseBody, {
-				status: 200,
-				headers: {
-					'content-type': result.contentType,
-					'Cache-Control': 'no-cache, no-store, must-revalidate',
-					'Pragma': 'no-cache',
-					'Expires': '0'
-				}
-			});
+			// Return the response directly for successful fetches
+			return response;
 		} catch (err) {
 			console.error('[WTTP PROTOCOL ERROR]', err);
 			return new Response('Internal WTTP Protocol Error', {
