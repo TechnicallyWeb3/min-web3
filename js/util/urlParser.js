@@ -186,7 +186,7 @@ var urlParser = {
   },
   getDomain: function (url) {
     url = urlParser.removeProtocol(url);
-    return url.split(/[/:]/)[0].toLowerCase();
+    return url.split('/')[0].toLowerCase();
   },
   validateDomain: function (domain) {
     domain = urlParser.unicodeRegex.test(domain)
@@ -228,14 +228,14 @@ function toInternalWttpUrl(url) {
     console.log('[DEBUG][toInternalWttpUrl] Input:', url);
   }
   // If url is just an ETH address, make it a full WTTP URL
-  if (/^0x[a-fA-F0-9]{40}$/.test(url)) {
+  if (/^0x[a-fA-F0-9]{40}(:[a-zA-Z0-9_-]+)?$/.test(url)) {
     url = `wttp://${url}/`;
   }
-  const match = url.match(/^wttp:\/\/([0-9a-zA-Z.]+)(\/.*)?$/);
+  const match = url.match(/^wttp:\/\/([0-9a-zA-Z.:_-]+)(\/.*)?$/);
   if (match) {
     const host = match[1];
     const path = match[2] || '/';
-    if (/^0x[a-fA-F0-9]{40}$/.test(host) || /\.eth$/.test(host)) {
+    if (/^0x[a-fA-F0-9]{40}(:[a-zA-Z0-9_-]+)?$/.test(host) || /^.+\.eth(:[a-zA-Z0-9_-]+)?$/.test(host)) {
       return `wttp://ca/${host}${path}`;
     }
   }
@@ -243,7 +243,7 @@ function toInternalWttpUrl(url) {
 }
 
 function toPrettyWttpUrl(url) {
-  const match = url.match(/^wttp:\/\/ca\/([0-9a-zA-Z.]+)(\/.*)?$/);
+  const match = url.match(/^wttp:\/\/ca\/([0-9a-zA-Z.:_-]+)(\/.*)?$/);
   if (match) {
     const address = match[1];
     const path = match[2] || '/';
@@ -252,6 +252,18 @@ function toPrettyWttpUrl(url) {
   return url;
 }
 
+function toWttpUrl(input) {
+  // If input starts with wttp://, use as-is
+  if (input.startsWith('wttp://')) return input;
+  // If input matches ETH or ENS (with optional :chain), convert to wttp://<input>/
+  if (/^0x[a-fA-F0-9]{40}(:[a-zA-Z0-9_-]+)?$/.test(input) || /^.+\.eth(:[a-zA-Z0-9_-]+)?$/.test(input)) {
+    return `wttp://${input}/`;
+  }
+  // Otherwise, return as-is
+  return input;
+}
+
 module.exports = urlParser;
 module.exports.toInternalWttpUrl = toInternalWttpUrl;
 module.exports.toPrettyWttpUrl = toPrettyWttpUrl;
+module.exports.toWttpUrl = toWttpUrl;
