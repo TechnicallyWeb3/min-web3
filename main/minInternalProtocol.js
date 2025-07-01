@@ -1,9 +1,8 @@
 const { pathToFileURL } = require('url')
-// const { getENSOwner } = require(path.join(__dirname, '..','min-web3', 'main', 'ensHelper'));
-// const { resolveUnstoppableDomain } = require(path.join(__dirname, '..','min-web3', 'main', 'unstoppableHelper'));
 
 const { WTTPHandler } = require('@wttp/handler');
 const mime = require('mime-types');
+// const { handleWttpRequest } = require('./wttpHandler.js');
 
 // Store current site per session (in-memory, not persistent)
 const sessionCurrentSite = new Map();
