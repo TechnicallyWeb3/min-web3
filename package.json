@@ -44,6 +44,7 @@
     "regedit": "^3.0.3",
     "sortablejs": "^1.15.1",
     "stemmer": "^1.0.5",
+    "tslib": "^2.8.1",
     "write-file-atomic": "^6.0.0"
   },
   "devDependencies": {
