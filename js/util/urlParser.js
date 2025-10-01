@@ -86,7 +86,7 @@ var urlParser = {
 
     // need to check for ethereum addresses, should check in authority (between // and /)
     if (urlParser.isURLMissingProtocol(url) && urlParser.isEthereumAddress(url)) {
-      console.log(urlParser.parseWeb3Url(url).url)
+      console.log('parseWeb3Url ', urlParser.parseWeb3Url(url).url)
       return 'wttp://' + urlParser.parseWeb3Url(url).url
     }
 
@@ -219,25 +219,33 @@ var urlParser = {
   parseWeb3Url: function (url) {
         // Extract the authority part of the URL (between optional // and before port/path)
         let authority = url
+        // console.log('url', url)
     
         // Remove protocol if present (including //)
         authority = authority.replace(/^[a-z0-9]+:\/\//i, '')
         const protocol = url.split(authority)[0]
         
         // Remove user info if present (user:pass@)
+        const userInfo = authority.includes("@") ? authority.split("@")[0] : ""
+        // console.log('userInfo', userInfo)
         const noUserInfo = authority.replace(/^[^@]*@/, '')
-        const userInfo = authority.split(noUserInfo)[0]
+        // console.log('noUserInfo', noUserInfo)
         
         // Extract just the hostname part (before port or path)
-        let hostname = authority.split(/[/:?#]/)[0]
-        const port = authority.split(hostname)[0]
+        let hostname = noUserInfo.split(/[/:?#]/)[0]
+        // console.log('authority', authority)
+        // console.log('hostname', hostname)
+        const port = noUserInfo.includes(":") ? noUserInfo.split(":")[1].split(/[/?#]/)[0] : ""
+        // console.log('port', port)
         const originalHostname = port ? hostname + ':' + port : hostname
+        // console.log('originalHostname', originalHostname)
 
         if (urlParser.isEthereumAddress(hostname)) {
           hostname = hostname.endsWith('.contractaddress0x') ? hostname : hostname + '.contractaddress0x'
         }
 
         const replaceHostname = port ? hostname + ':' + port : hostname
+        // console.log('replaceHostname', replaceHostname)
 
         url = url.replace(originalHostname, replaceHostname)
         

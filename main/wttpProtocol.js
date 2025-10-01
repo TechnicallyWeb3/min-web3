@@ -14,6 +14,7 @@ function registerWttpProtocol (ses) {
         start: range.split('-')[0].trim(),
         end: range.split('-')[1].trim()
       } : undefined
+      console.log('req.url', req.url)
       const response = await wttp.fetch(req.url, {
         ifModifiedSince: req.headers.get('if-modified-since'),
         ifNoneMatch: req.headers.get('if-none-match'),
