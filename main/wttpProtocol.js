@@ -2,7 +2,7 @@
 
 // Initialize WTTP handler
 const { WTTPHandler } = require('@wttp/handler')
-const wttp = new WTTPHandler(undefined, "polygon")
+const wttp = new WTTPHandler();
 
 function registerWttpProtocol (ses) {
   console.log('Registering wttp protocol handler for session:', ses.id || 'default')
