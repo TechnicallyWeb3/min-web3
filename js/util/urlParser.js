@@ -227,10 +227,18 @@ function toInternalWttpUrl(url) {
   if (url.startsWith('wttp://')) {
     console.log('[DEBUG][toInternalWttpUrl] Input:', url);
   }
+  
+  // Only process URLs that are WTTP URLs or ETH/ENS addresses
+  // Don't convert relative paths or other protocols
+  if (!url.startsWith('wttp://') && !/^0x[a-fA-F0-9]{40}(:[a-zA-Z0-9_-]+)?$/.test(url) && !/^.+\.eth(:[a-zA-Z0-9_-]+)?$/.test(url)) {
+    return url; // Return as-is for relative paths and other protocols
+  }
+  
   // If url is just an ETH address, make it a full WTTP URL
   if (/^0x[a-fA-F0-9]{40}(:[a-zA-Z0-9_-]+)?$/.test(url)) {
     url = `wttp://${url}/`;
   }
+  
   const match = url.match(/^wttp:\/\/([0-9a-zA-Z.:_-]+)(\/.*)?$/);
   if (match) {
     const host = match[1];

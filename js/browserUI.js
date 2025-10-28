@@ -377,6 +377,12 @@ window.addEventListener('load', function () {
 
 // Helper: Convert pretty WTTP URL to internal format
 function toInternalWttpUrl(url) {
+  // Only process URLs that are WTTP URLs or ETH/ENS addresses
+  // Don't convert relative paths or other protocols
+  if (!url.startsWith('wttp://') && !/^0x[a-fA-F0-9]{40}$/.test(url) && !/\.eth$/.test(url)) {
+    return url; // Return as-is for relative paths and other protocols
+  }
+  
   const match = url.match(/^wttp:\/\/([0-9a-zA-Z.]+)(\/.*)?$/);
   if (match) {
     const host = match[1];
