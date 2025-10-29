@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
   "name": "min",
   "productName": "Min",
@@ -95,3 +96,95 @@
     "url": "https://github.com/minbrowser/min.git"
   }
 }
+=======
+{
+  "name": "min",
+  "productName": "Min",
+  "author": "PalmerAL",
+  "version": "1.35.2",
+  "description": "A fast, minimal browser that protects your privacy",
+  "electronVersion": "38.3.0",
+  "main": "main.build.js",
+  "standard": {
+    "globals": [
+      "l",
+      "tabs",
+      "tasks",
+      "globalArgs",
+      "platformType",
+      "throttle",
+      "debounce",
+      "empty",
+      "alert",
+      "confirm",
+      "requestAnimationFrame",
+      "requestIdleCallback",
+      "fetch",
+      "localStorage",
+      "performance",
+      "IntersectionObserver",
+      "Node",
+      "Event"
+    ]
+  },
+  "dependencies": {
+    "@browsermt/bergamot-translator": "^0.4.9",
+    "@electron/fuses": "^1.7.0",
+    "chokidar": "^3.6.0",
+    "dexie": "^3.0.3",
+    "dragula": "github:minbrowser/dragula",
+    "electron-squirrel-startup": "^1.0.0",
+    "expr-eval": "^2.0.2",
+    "node-abi": "^3.8.0",
+    "papaparse": "^5.5.1",
+    "pdfjs-dist": "4.2.67",
+    "quick-score": "^0.2.0",
+    "regedit": "^3.0.3",
+    "sortablejs": "^1.15.1",
+    "stemmer": "^1.0.5",
+    "write-file-atomic": "^6.0.0"
+  },
+  "devDependencies": {
+    "archiver": "^4.0.1",
+    "browserify": "^16.5.1",
+    "concurrently": "^5.2.0",
+    "decomment": "^0.9.0",
+    "electron": "38.3.0",
+    "electron-builder": "^24.13.3",
+    "electron-installer-windows": "^3.0.0",
+    "electron-renderify": "0.0.2",
+    "prebuild-install": "^7.0.1",
+    "prettier": "^2.2.1",
+    "snazzy": "^9.0.0",
+    "standard": "^14.3.4"
+  },
+  "license": "Apache-2.0",
+  "scripts": {
+    "postinstall": "node ./scripts/setupDevEnv.js",
+    "test": "standard --verbose js/**/*.js main/*.js",
+    "watch": "node ./scripts/watch.js",
+    "startElectron": "electron . --development-mode",
+    "start": "npm run build && concurrently \"npm run watch\" \"npm run startElectron\"",
+    "buildMain": "node ./scripts/buildMain.js",
+    "buildBrowser": "node ./scripts/buildBrowser.js",
+    "buildBrowserStyles": "node ./scripts/buildBrowserStyles.js",
+    "buildPreload": "node ./scripts/buildPreload.js",
+    "build": "npm run buildMain && npm run buildBrowser && npm run buildBrowserStyles && npm run buildPreload",
+    "buildWindows": "npm run build && node ./scripts/buildWindows.js",
+    "buildMacIntel": "npm run build && node ./scripts/buildMac.js --platform=x86",
+    "buildMacArm": "npm run build && node ./scripts/buildMac.js --platform=arm64",
+    "buildDebian": "npm run build && node ./scripts/buildDebian.js --platform=amd64",
+    "buildRedhat": "npm run build && node ./scripts/buildRedhat.js",
+    "buildAll": "npm run buildWindows && npm run buildMacIntel && npm run buildMacArm && npm run buildDebian && npm run buildRedhat && npm run buildAppImage",
+    "buildAppImage": "npm run build && node ./scripts/buildAppImage.js",
+    "updateFilters": "node ./ext/filterLists/updateEasylist.js",
+    "updateHttpsList": "node ./ext/httpsUpgrade/updateHttpsList.js",
+    "updateSuffixes": "node ./ext/publicSuffixes/updateSuffixes.js",
+    "lint": "prettier --write **/**/*.css **/**/*.md **/**/*.html **/**/*.json && standard --fix js/**/*.js main/*.js | snazzy"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/minbrowser/min.git"
+  }
+}
+>>>>>>> origin/master
