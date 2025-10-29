@@ -1,5 +1,5 @@
 var urlParser = require('util/urlParser.js')
-const { toInternalWttpUrl } = require('util/urlParser.js');
+const { toInternalWttpUrl, toPrettyWttpUrl } = require('util/urlParser.js');
 var settings = require('util/settings/settings.js')
 
 /* implements selecting webviews, switching between them, and creating new ones. */

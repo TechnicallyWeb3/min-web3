@@ -167,7 +167,17 @@ function handleRequest (details, callback) {
   // webContentsId may not exist if this request is a mainFrame or subframe
   let domain
   if (details.webContentsId) {
-    domain = parser.getUrlHost(webContents.fromId(details.webContentsId).getURL())
+    const topLevelUrl = webContents.fromId(details.webContentsId).getURL()
+    // If the top-level page is served over wttp://, bypass filtering for subresource requests
+    // Many WTTP apps reference third-party CDNs (e.g., jQuery), which otherwise get blocked
+    if (topLevelUrl && topLevelUrl.startsWith('wttp://')) {
+      callback({
+        cancel: false,
+        requestHeaders: details.requestHeaders
+      })
+      return
+    }
+    domain = parser.getUrlHost(topLevelUrl)
   }
 
   const isExceptionDomain = domain && requestDomainIsException(domain)

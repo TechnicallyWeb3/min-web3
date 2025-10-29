@@ -321,7 +321,7 @@ document.addEventListener('DOMContentLoaded', function () {
         prettyUrl = `wttp://${prettyUrl}/`;
       }
 
-      let internalUrl = toInternalWttpUrl(prettyUrl);
+      let internalUrl = (urlParser.toInternalWttpUrl || toInternalWttpUrl)(prettyUrl);
       webviews.update(tabs.getSelected(), internalUrl);
       // Store the pretty URL for this tab
       tabs.update(tabs.getSelected(), { prettyUrl: prettyUrl });
@@ -375,34 +375,19 @@ window.addEventListener('load', function () {
   }
 });
 
-// Helper: Convert pretty WTTP URL to internal format
+// Delegate to shared URL helpers (supports ENS, contract addresses, and optional :chain)
 function toInternalWttpUrl(url) {
-  // Only process URLs that are WTTP URLs or ETH/ENS addresses
-  // Don't convert relative paths or other protocols
-  if (!url.startsWith('wttp://') && !/^0x[a-fA-F0-9]{40}$/.test(url) && !/\.eth$/.test(url)) {
-    return url; // Return as-is for relative paths and other protocols
+  if (urlParser && typeof urlParser.toInternalWttpUrl === 'function') {
+    return urlParser.toInternalWttpUrl(url);
   }
-  
-  const match = url.match(/^wttp:\/\/([0-9a-zA-Z.]+)(\/.*)?$/);
-  if (match) {
-    const host = match[1];
-    const path = match[2] || '/';
-    if (/^0x[a-fA-F0-9]{40}$/.test(host) || /\.eth$/.test(host)) {
-      return `wttp://ca/${host}${path}`;
-    }
-  }
-  return url;
+  return url; // fallback no-op
 }
 
-// Helper: Convert internal WTTP URL to pretty format
 function toPrettyWttpUrl(url) {
-  const match = url.match(/^wttp:\/\/ca\/([0-9a-zA-Z.]+)(\/.*)?$/);
-  if (match) {
-    const address = match[1];
-    const path = match[2] || '/';
-    return `wttp://${address}${path}`;
+  if (urlParser && typeof urlParser.toPrettyWttpUrl === 'function') {
+    return urlParser.toPrettyWttpUrl(url);
   }
-  return url;
+  return url; // fallback no-op
 }
 
 module.exports = {

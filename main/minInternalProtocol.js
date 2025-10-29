@@ -57,7 +57,7 @@ protocol.registerSchemesAsPrivileged([
 	{
 		scheme: 'wttp',
 		privileges: {
-			standard: true,
+			standard: false,
 			secure: true,
 			allowServiceWorkers: true,
 			supportFetchAPI: true,
@@ -183,10 +183,20 @@ function registerBundleProtocol(ses) {
 
 			const headers = new Headers(wttpResult.headers);
 			
+			// If missing, infer content-type from the requested filePath
+			let detectedContentType = headers.get('content-type') || headers.get('Content-Type') || '';
+			if (!detectedContentType) {
+				const ext = (filePath || '').split('.').pop()?.toLowerCase();
+				const inferred = mime.lookup(ext || '') || (filePath === '' || filePath === 'index' || filePath === 'index.html' ? 'text/html' : '');
+				if (inferred) {
+					headers.set('content-type', inferred);
+					detectedContentType = inferred;
+				}
+			}
+			
 			// If this is HTML content, inject a base tag to fix relative URLs
 			let body = wttpResult.body;
-			const contentType = headers.get('content-type') || '';
-			if (contentType.includes('text/html')) {
+			if ((detectedContentType || '').includes('text/html')) {
 				try {
 					const htmlText = typeof body === 'string' ? body : await new Response(body).text();
 					// Inject base tag with the pretty URL (without ca/ prefix)
@@ -257,10 +267,20 @@ function registerBundleProtocol(ses) {
 
 			const headers = new Headers(wttpResult.headers);
 			
+			// If missing, infer content-type from the requested path
+			let detectedContentType = headers.get('content-type') || headers.get('Content-Type') || '';
+			if (!detectedContentType) {
+				const ext = (fullPath || '').split('.').pop()?.toLowerCase();
+				const inferred = mime.lookup(ext || '') || (fullPath === '' || fullPath === 'index' || fullPath === 'index.html' ? 'text/html' : '');
+				if (inferred) {
+					headers.set('content-type', inferred);
+					detectedContentType = inferred;
+				}
+			}
+			
 			// If this is HTML content, inject a base tag to fix relative URLs
 			let body = wttpResult.body;
-			const contentType = headers.get('content-type') || '';
-			if (contentType.includes('text/html')) {
+			if ((detectedContentType || '').includes('text/html')) {
 				try {
 					const htmlText = typeof body === 'string' ? body : await new Response(body).text();
 					// Inject base tag with the pretty URL (without ca/ prefix)
