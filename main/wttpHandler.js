@@ -100,7 +100,7 @@ function registerWttpProtocol(ses) {
                 if ((detectedContentType || '').includes('text/html')) {
                     try {
                         const htmlText = typeof body === 'string' ? body : await new Response(body).text();
-                        const baseUrl = `wttp://${siteAddress}/`;
+                        const baseUrl = `wttp://ca/${siteAddress}/`;
                         const baseTag = `<base href="${baseUrl}">`;
                         let modifiedHtml = htmlText;
                         if (htmlText.includes('<head>')) {
@@ -166,7 +166,7 @@ function registerWttpProtocol(ses) {
             if ((detectedContentType || '').includes('text/html')) {
                 try {
                     const htmlText = typeof body === 'string' ? body : await new Response(body).text();
-                    const baseUrl = `wttp://${originalSite}/`;
+                    const baseUrl = `wttp://ca/${originalSite}/`;
                     const baseTag = `<base href="${baseUrl}">`;
                     let modifiedHtml = htmlText;
                     if (htmlText.includes('<head>')) {
