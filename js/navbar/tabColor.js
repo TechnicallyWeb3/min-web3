@@ -183,55 +183,18 @@ function setColor (bg, fg, isLowContrast) {
 const tabColor = {
   useSiteTheme: true,
   initialize: function () {
-    webviews.bindEvent('page-favicon-updated', function (tabId, favicons) {
-      tabColor.updateFromImage(favicons, tabId, function () {
-        if (tabId === tabs.getSelected()) {
-          tabColor.updateColors()
-        }
-      })
-    })
-
-    webviews.bindEvent('did-change-theme-color', function (tabId, color) {
-      tabColor.updateFromThemeColor(color, tabId)
-      if (tabId === tabs.getSelected()) {
-        tabColor.updateColors()
-      }
-    })
-
-    /*
-    Reset the icon color when the page changes, so that if the new page has no icon it won't inherit the old one
-    But don't actually render anything here because the new icon won't have been received yet
-    and we want to go from old color > new color, rather than old color > default > new color
-     */
-    webviews.bindEvent('did-start-navigation', function (tabId, url, isInPlace, isMainFrame, frameProcessId, frameRoutingId) {
-      if (isMainFrame) {
-        tabs.update(tabId, {
-          backgroundColor: null,
-          favicon: null
-        })
-      }
-    })
-
-    /*
-    Always rerender once the page has finished loading
-    this is needed to go back to default colors in case this page doesn't specify one
-     */
-    webviews.bindEvent('did-finish-load', function (tabId) {
-      tabColor.updateColors()
-    })
-
-    // theme changes can affect the tab colors
-    window.addEventListener('themechange', function (e) {
-      tabColor.updateColors()
-    })
-
+    // Remove or comment out the existing event listeners
+    
+    // Add this line to set the static color when initializing
+    this.setStaticColor()
+    
+    // Keep the settings listener if you want to be able to toggle this feature
     settings.listen('siteTheme', function (value) {
       if (value !== undefined) {
         tabColor.useSiteTheme = value
+        tabColor.setStaticColor() // Call this instead of updateColors
       }
     })
-
-    tasks.on('tab-selected', this.updateColors)
   },
   updateFromThemeColor: function (color, tabId) {
     if (!color) {
@@ -309,6 +272,11 @@ const tabColor = {
       return setColor(defaultColors.darkMode[0], defaultColors.darkMode[1])
     }
     return setColor(defaultColors.lightMode[0], defaultColors.lightMode[1])
+  },
+  setStaticColor: function () {
+    const staticBgColor = 'rgb(50, 50, 50)' // Change this to your desired color
+    const staticFgColor = 'white' // Change this to your desired text color
+    setColor(staticBgColor, staticFgColor, false)
   }
 }
 

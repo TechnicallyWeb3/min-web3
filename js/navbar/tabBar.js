@@ -8,7 +8,6 @@ const dragula = require('dragula')
 const settings = require('util/settings/settings.js')
 const urlParser = require('util/urlParser.js')
 
-const tabEditor = require('navbar/tabEditor.js')
 const progressBar = require('navbar/progressBar.js')
 const permissionRequests = require('navbar/permissionRequests.js')
 
@@ -45,9 +44,16 @@ const tabBar = {
   },
   createTab: function (data) {
     var tabEl = document.createElement('div')
-    tabEl.className = 'tab-item'
+    tabEl.className = 'tab-item tab-animate-in'
     tabEl.setAttribute('data-tab', data.id)
     tabEl.setAttribute('role', 'tab')
+    // Remove animation class after animation ends so it doesn't replay on tab switches
+    tabEl.addEventListener('animationend', function handler(e) {
+      if (e.animationName === 'tab-animate-in') {
+        tabEl.classList.remove('tab-animate-in')
+        tabEl.removeEventListener('animationend', handler)
+      }
+    })
 
     tabEl.appendChild(readerView.getButton(data.id))
     tabEl.appendChild(tabAudio.getButton(data.id))
@@ -82,6 +88,18 @@ const tabBar = {
     var titleContainer = document.createElement('div')
     titleContainer.className = 'title-container'
 
+    var spinner = document.createElement('span')
+    spinner.className = 'tab-spinner'
+    titleContainer.appendChild(spinner)
+
+    var favicon = document.createElement('img')
+    favicon.className = 'tab-favicon'
+    titleContainer.appendChild(favicon)
+
+    var textContainer = document.createElement('div')
+    textContainer.className = 'tab-text-container'
+    titleContainer.appendChild(textContainer)
+
     var title = document.createElement('span')
     title.className = 'title'
 
@@ -90,18 +108,15 @@ const tabBar = {
     var urlElement = document.createElement('span')
     urlElement.className = 'url-element'
 
-    titleContainer.appendChild(title)
-    titleContainer.appendChild(urlElement)
+    textContainer.appendChild(title)
+    textContainer.appendChild(urlElement)
 
     tabEl.appendChild(titleContainer)
 
     // click to enter edit mode or switch to a tab
     tabEl.addEventListener('click', function (e) {
-      if (tabs.getSelected() !== data.id) { // else switch to tab if it isn't focused
-        tabBar.events.emit('tab-selected', data.id)
-      } else { // the tab is focused, edit tab instead
-        tabEditor.show(data.id)
-      }
+      // Always just switch to the tab, do not show the tab editor
+      tabBar.events.emit('tab-selected', data.id)
     })
 
     tabEl.addEventListener('auxclick', function (e) {
@@ -110,27 +125,47 @@ const tabBar = {
       }
     })
 
-    tabEl.addEventListener('wheel', function (e) {
-      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
-        // https://github.com/minbrowser/min/issues/698
-        return
+    // tabEl.addEventListener('wheel', function (e) {
+    //   if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+    //     // https://github.com/minbrowser/min/issues/698
+    //     return
+    //   }
+    //   if (e.deltaY > 65 && e.deltaX < 10 && Date.now() - lastTabDeletion > 900) { // swipe up to delete tabs
+    //     lastTabDeletion = Date.now()
+
+    //     /* tab deletion is disabled in focus mode */
+    //     if (focusMode.enabled()) {
+    //       focusMode.warn()
+    //       return
+    //     }
+
+    //     this.style.transform = 'translateY(-100%)'
+
+    //     setTimeout(function () {
+    //       tabBar.events.emit('tab-closed', data.id)
+    //     }, 150) // wait until the animation has completed
+    //   }
+    // })
+
+    var spinner = tabEl.querySelector('.tab-spinner')
+    var favicon = tabEl.querySelector('.tab-favicon')
+    const isNewTab = data.url === '' || data.url === urlParser.parse('min://newtab')
+    if (isNewTab) {
+      spinner.style.display = 'none'
+      favicon.style.display = ''
+      favicon.src = 'assets/tw3.png'
+    } else if (!data.loaded) {
+      spinner.style.display = ''
+      favicon.style.display = 'none'
+    } else {
+      spinner.style.display = 'none'
+      if (data.favicon) {
+        favicon.style.display = ''
+        favicon.src = data.favicon
+      } else {
+        favicon.style.display = 'none'
       }
-      if (e.deltaY > 65 && e.deltaX < 10 && Date.now() - lastTabDeletion > 900) { // swipe up to delete tabs
-        lastTabDeletion = Date.now()
-
-        /* tab deletion is disabled in focus mode */
-        if (focusMode.enabled()) {
-          focusMode.warn()
-          return
-        }
-
-        this.style.transform = 'translateY(-100%)'
-
-        setTimeout(function () {
-          tabBar.events.emit('tab-closed', data.id)
-        }, 150) // wait until the animation has completed
-      }
-    })
+    }
 
     tabBar.updateTab(data.id, tabEl)
 
@@ -155,6 +190,25 @@ const tabBar = {
 
     var titleEl = tabEl.querySelector('.title')
     titleEl.textContent = tabTitle
+
+    var spinner = tabEl.querySelector('.tab-spinner')
+    var favicon = tabEl.querySelector('.tab-favicon')
+    if (isNewTab) {
+      spinner.style.display = 'none'
+      favicon.style.display = ''
+      favicon.src = 'assets/tw3.png'
+    } else if (!tabData.loaded) {
+      spinner.style.display = ''
+      favicon.style.display = 'none'
+    } else {
+      spinner.style.display = 'none'
+      if (tabData.favicon) {
+        favicon.style.display = ''
+        favicon.src = tabData.favicon
+      } else {
+        favicon.style.display = 'none'
+      }
+    }
 
     tabEl.title = tabTitle
     if (tabData.private) {
@@ -206,10 +260,19 @@ const tabBar = {
       tabBar.tabElementMap[tab.id] = el
     })
 
+    // Always create and append the add-tab-button at the end
+    let addTabBtn = document.getElementById('add-tab-button')
+    if (addTabBtn) {
+      tabBar.containerInner.appendChild(addTabBtn)
+    }
+
     if (tabs.getSelected()) {
       tabBar.setActiveTab(tabs.getSelected())
     }
     tabBar.handleSizeChange()
+
+    // Auto-scroll to end to keep add-tab-button visible
+    tabBar.containerInner.scrollLeft = tabBar.containerInner.scrollWidth
   },
   addTab: function (tabId) {
     var tab = tabs.get(tabId)
@@ -219,15 +282,34 @@ const tabBar = {
     tabBar.containerInner.insertBefore(tabEl, tabBar.containerInner.childNodes[index])
     tabBar.tabElementMap[tabId] = tabEl
     tabBar.handleSizeChange()
+
+    // Auto-scroll to end to keep add-tab-button visible
+    tabBar.containerInner.scrollLeft = tabBar.containerInner.scrollWidth
   },
   removeTab: function (tabId) {
     var tabEl = tabBar.getTab(tabId)
     if (tabEl) {
-      // The tab does not have a corresponding .tab-item element.
-      // This happens when destroying tabs from other task where this .tab-item is not present
-      tabBar.containerInner.removeChild(tabEl)
-      delete tabBar.tabElementMap[tabId]
-      tabBar.handleSizeChange()
+      // Step 1: Remove flex:1 so we can animate width
+      tabEl.style.flex = 'none'
+      // Step 2: Set width to current computed width
+      const rect = tabEl.getBoundingClientRect()
+      tabEl.style.width = rect.width + 'px'
+      // Step 3: Force reflow
+      void tabEl.offsetWidth
+      // Step 4: Add .tab-closing and set width to 0
+      tabEl.classList.add('tab-closing')
+      tabEl.style.width = '0px'
+      // Step 5: Remove from DOM after transition
+      tabEl.addEventListener('transitionend', function handler(e) {
+        if (e.propertyName === 'width') {
+          tabEl.removeEventListener('transitionend', handler)
+          if (tabEl.parentNode) {
+            tabBar.containerInner.removeChild(tabEl)
+          }
+          delete tabBar.tabElementMap[tabId]
+          tabBar.handleSizeChange()
+        }
+      })
     }
   },
   handleDividerPreference: function (dividerPreference) {
@@ -290,7 +372,7 @@ webviews.bindEvent('did-stop-loading', function (tabId) {
 })
 
 tasks.on('tab-updated', function (id, key) {
-  var updateKeys = ['title', 'secure', 'url', 'muted', 'hasAudio']
+  var updateKeys = ['title', 'secure', 'url', 'muted', 'hasAudio', 'favicon', 'loaded']
   if (updateKeys.includes(key)) {
     tabBar.updateTab(id)
   }
@@ -313,15 +395,8 @@ tabBar.container.addEventListener('drop', e => {
   if (!path) {
     return
   }
-  if (tabEditor.isShown || tabs.isEmpty()) {
-    webviews.update(tabs.getSelected(), path)
-    tabEditor.hide()
-  } else {
-    require('browserUI.js').addTab(tabs.add({
-      url: path,
-      private: tabs.get(tabs.getSelected()).private
-    }), { enterEditMode: false, openInBackground: !settings.get('openTabsInForeground') })
-  }
+  // Always just update the webview with the dropped path
+  webviews.update(tabs.getSelected(), path)
 })
 
 module.exports = tabBar

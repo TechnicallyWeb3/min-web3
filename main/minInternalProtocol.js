@@ -1,93 +1,118 @@
 const { pathToFileURL } = require('url')
 
+// const { WTTPHandler } = require('@wttp/handler');
+// const mime = require('mime-types');
+// Use absolute path at runtime (main.build.js lives at project root)
+const { registerWttpProtocol } = require(__dirname + '/main/wttpHandler.js');
+// const { handleWttpRequest } = require('./wttpHandler.js');
+
+// Store current site per session (in-memory, not persistent)
+// const sessionCurrentSite = new Map();
+
+// Helper: Return a simple HTML error page
+// function getErrorPage(siteAddress) {
+// 	return `<html><body><h1>404 Not Found</h1><p>Site: ${siteAddress}</p></body></html>`;
+// }
+
+// Helper: Validate Ethereum address
+// function isValidEthAddress(addr) {
+// 	return /^0x[a-fA-F0-9]{40}(:[a-zA-Z0-9_-]+)?$/.test(addr);
+// }
+// Helper: Validate ENS name
+// function isValidEnsName(addr) {
+// 	return /^.+\.eth(:[a-zA-Z0-9_-]+)?$/.test(addr);
+// }
+// Helper: Get session ID
+// function getSessionId(ses) {
+// 	return ses && ses.id ? ses.id : 'default';
+// }
+// Helper: Get site address from URL object
+// function getSiteAddressFromUrl(urlObj) {
+// 	return urlObj.hostname;
+// }
+// Helper: Get file path from URL object
+// function getFilePathFromUrl(urlObj) {
+// 	let filePath = urlObj.pathname || '';
+// 	if (filePath.startsWith('/')) filePath = filePath.slice(1);
+// 	return filePath;
+// }
+
 protocol.registerSchemesAsPrivileged([
-  {
-    scheme: 'min',
-    privileges: {
-      standard: true,
-      secure: true,
-      supportFetchAPI: true,
-    }
-  },
-  {
-    scheme: 'web3',
-    privileges: {
-      standard: true,
-      secure: true,
-      supportFetchAPI: true,
-      corsEnabled: true,
-      stream: true
-    }
-  }
+	{
+		scheme: 'min',
+		privileges: {
+			standard: true,
+			secure: true,
+			supportFetchAPI: true,
+		}
+	},
+	{
+		scheme: 'web3',
+		privileges: {
+			standard: true,
+			secure: true,
+			supportFetchAPI: true,
+			corsEnabled: true,
+			stream: true
+		}
+	},
+	{
+		scheme: 'wttp',
+		privileges: {
+			standard: false,
+			secure: true,
+			allowServiceWorkers: true,
+			supportFetchAPI: true,
+			corsEnabled: true,
+			stream: true,
+			bypassCSP: false
+		}
+	}
 ])
 
-function registerBundleProtocol (ses) {
-  ses.protocol.handle('min', (req) => {
 
-    console.log('Debug: Received min request:', req.url);
-    let { host, pathname } = new URL(req.url)
 
-    if (pathname.charAt(0) === '/') {
-      pathname = pathname.substring(1)
-    }
+function registerBundleProtocol(ses) {
+	ses.protocol.handle('min', (req) => {
 
-    if (host !== 'app') {
-      return new Response('bad', {
-        status: 400,
-        headers: { 'content-type': 'text/html' }
-      })
-    }
+		console.log('Debug: Received min request:', req.url);
+		let { host, pathname } = new URL(req.url)
 
-    // NB, this checks for paths that escape the bundle, e.g.
-    // app://bundle/../../secret_file.txt
-    const pathToServe = path.resolve(__dirname, pathname)
-    const relativePath = path.relative(__dirname, pathToServe)
-    const isSafe = relativePath && !relativePath.startsWith('..') && !path.isAbsolute(relativePath)
+		if (pathname.charAt(0) === '/') {
+			pathname = pathname.substring(1)
+		}
 
-    if (!isSafe) {
-      return new Response('bad', {
-        status: 400,
-        headers: { 'content-type': 'text/html' }
-      })
-    }
+		if (host !== 'app') {
+			return new Response('bad', {
+				status: 400,
+				headers: { 'content-type': 'text/html' }
+			})
+		}
 
-    return net.fetch(pathToFileURL(pathToServe).toString())
-  })
+		// NB, this checks for paths that escape the bundle, e.g.
+		// app://bundle/../../secret_file.txt
+		const pathToServe = path.resolve(__dirname, pathname)
+		const relativePath = path.relative(__dirname, pathToServe)
+		const isSafe = relativePath && !relativePath.startsWith('..') && !path.isAbsolute(relativePath)
 
-  ses.protocol.handle('web', async (req) => {
-    console.log('Debug: Received web3 request:', req.url)
-    const url = new URL(req.url)
-    const contractAddress = url.hostname
-    const path = url.pathname || '/'
-    console.log('Debug: Contract address:', contractAddress)
-    console.log('Debug: Path:', path)
-    try {
-      const resource = await fetchContractResource(contractAddress, path)
-      console.log('Debug: Resource:', resource.content)
-      console.log('Debug: Resource:', resource.contentType)
-      if (resource) {
-        return new Response(resource.content, {
-          status: 200,
-          headers: { 'content-type': resource.contentType }
-        })
-      } else {
-        return new Response('Resource not found', {
-          status: 404,
-          headers: { 'content-type': 'text/plain' }
-        })
-      }
-    } catch (error) {
-      console.error('Error fetching resource:', error)
-      return new Response('Error fetching resource', {
-        status: 500,
-        headers: { 'content-type': 'text/plain' }
-      })
-    }
-  })
+		if (!isSafe) {
+			return new Response('bad', {
+				status: 400,
+				headers: { 'content-type': 'text/html' }
+			})
+		}
+
+		return net.fetch(pathToFileURL(pathToServe).toString())
+	})
+
+	// Register WTTP protocol handler via extracted module
+	registerWttpProtocol(ses)
 }
 
 app.on('session-created', (ses) => {
-  if (ses !== session.defaultSession) {
-    registerBundleProtocol(ses)
-  }
+	if (ses !== session.defaultSession) {
+		registerBundleProtocol(ses)
+	}
 })
+
+

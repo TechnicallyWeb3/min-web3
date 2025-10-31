@@ -11,6 +11,87 @@ const tabEditor = {
   input: document.getElementById('tab-editor-input'),
   star: null,
   isShown: false,
+  show: function () { return; },
+  hide: function () {
+    tabEditor.container.hidden = true
+    tabEditor.container.removeAttribute('style')
+    tabEditor.isShown = false
+
+    tabEditor.input.blur()
+    searchbar.hide()
+
+    document.body.classList.remove('is-edit-mode')
+
+    webviews.hidePlaceholder('editMode')
+  },
+  initialize: function () { return; },
+  container: document.getElementById('tab-editor'),
+  input: document.getElementById('tab-editor-input'),
+  star: null,
+  isShown: false,
+  show: function (tabId, editingValue, showSearchbar) {
+    /* Edit mode is not available in modal mode. */
+    if (modalMode.enabled()) {
+      return
+    }
+
+    tabEditor.container.hidden = false
+    tabEditor.isShown = true
+
+    bookmarkStar.update(tabId, tabEditor.star)
+    contentBlockingToggle.update(tabId, tabEditor.contentBlockingToggle)
+
+    webviews.requestPlaceholder('editMode')
+
+    document.body.classList.add('is-edit-mode')
+
+    var currentURL = urlParser.getSourceURL(tabs.get(tabId).url)
+    if (currentURL === 'min://newtab') {
+      currentURL = ''
+    }
+
+    tabEditor.input.value = editingValue || currentURL
+    tabEditor.input.focus()
+    if (!editingValue) {
+      tabEditor.input.select()
+    }
+    // https://github.com/minbrowser/min/discussions/1506
+    tabEditor.input.scrollLeft = 0
+
+    searchbar.show(tabEditor.input)
+
+    if (showSearchbar !== false) {
+      if (editingValue) {
+        searchbar.showResults(editingValue, null)
+      } else {
+        searchbar.showResults('', null)
+      }
+    }
+
+    /* animation */
+    if (tabs.count() > 1) {
+      requestAnimationFrame(function () {
+        var item = document.querySelector(`.tab-item[data-tab="${tabId}"]`)
+        var originCoordinates = item.getBoundingClientRect()
+
+        var finalCoordinates = document.querySelector('#tabs').getBoundingClientRect()
+
+        var translateX = Math.min(Math.round(originCoordinates.x - finalCoordinates.x) * 0.45, window.innerWidth)
+
+        tabEditor.container.style.opacity = 0
+        tabEditor.container.style.transform = `translateX(${translateX}px)`
+        requestAnimationFrame(function () {
+          tabEditor.container.style.transition = '0.135s all'
+          tabEditor.container.style.opacity = 1
+          tabEditor.container.style.transform = ''
+        })
+      })
+    }
+  },
+  star: null,
+  contentBlockingToggle: null,
+  input: document.getElementById('tab-editor-input'),
+  isShown: false,
   show: function (tabId, editingValue, showSearchbar) {
     /* Edit mode is not available in modal mode. */
     if (modalMode.enabled()) {

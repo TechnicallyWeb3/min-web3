@@ -4,17 +4,9 @@ const searchEngine = require('util/searchEngine.js');
 const hosts = require('./hosts.js');
 const httpsTopSites = require('../../ext/httpsUpgrade/httpsTopSites.json');
 const publicSuffixes = require('../../ext/publicSuffixes/public_suffix_list.json');
-const { Web3 } = require('web3');
-const { fetchContractHTML } = require('./web3Helpers.js');
-const { ipcRenderer } = require('electron')
+// const { fetchContractHTML } = require('./web3Helpers.js');
+const { ipcRenderer } = require('electron');
 
-const chain = {
-  chainName: 'Polygon',
-  chainSymbol: 'MATIC',
-  chainId: 137,
-  rpc: 'https://polygon-bor-rpc.publicnode.com',
-  explorerPrefix: 'https://polygonscan.com/address/'
-};
 
 const showExplorer = false;
 
@@ -26,20 +18,14 @@ function removeTrailingSlash(url) {
   return (url.endsWith('/') ? url.slice(0, -1) : url);
 }
 
-function renderHTML(ca, htmlData) {
-  try {
-    console.log('Data to be sent:', ca, htmlData); // Convert to string if necessary
-    ipcRenderer.send('loadHTMLInView', {ca,htmlData});
-  } catch (error) {
-    console.error('Error sending data to IPC:', error);
-  }
-}
-
+const unstoppableTLDs = ['.crypto', '.zil', '.nft', '.blockchain', '.bitcoin', '.x', '.888', '.dao', '.wallet', 'unstoppable'];
 
 var urlParser = {
   validIP4Regex: /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/i,
   validDomainRegex: /^(?!-)(?:.*@)*?([a-z0-9-._]+[a-z0-9]|\[[:a-f0-9]+\])/i,
-  validWeb3Regex: /^(0x[a-fA-F0-9]{40}|[^:\s]+:[^/\s]*|\S+\/\*|\S+\?\S*)$/,
+  validWeb3Regex: /^0x[a-fA-F0-9]{40}$/,
+  validUnstoppableRegex: new RegExp(`^([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+(?:${unstoppableTLDs.join('|')})$`, 'i'),
+  validENSRegex: /^([a-z0-9-]+\.)*[a-z0-9-]+\.eth$/i,
   unicodeRegex: /[^\u0000-\u00ff]/,
   removeProtocolRegex: /^(https?|file|web3):\/\//i,
   protocolRegex: /^[a-z0-9]+:\/\//,
@@ -69,6 +55,7 @@ var urlParser = {
     return !urlParser.protocolRegex.test(url);
   },
   parse:  function (url) {
+    console.log('[DEBUG][urlParser] Received URL for parsing:', url);
     url = url.trim(); // remove whitespace common on copy-pasted url's
 
     if (!url) {
@@ -89,11 +76,28 @@ var urlParser = {
 
     const contractAddress = urlParser.removeProtocol(url);
     if (urlParser.validWeb3Regex.test(contractAddress)) {
-      return `web://${contractAddress}`;
+      return `wttp://${contractAddress}`;
     }
 
-    if (url.startsWith('web3://')) {
-      return 'web://' + url.slice(7)
+    // Check for ENS domains
+    if (urlParser.validENSRegex.test(url)) {
+      console.log('ENS domain detected', url);
+      return `wttp://${url}`;
+      // return getENSOwner(url).then((owner) => {
+      //   console.log(owner + "Returned here");
+      //   return `web://${owner}`
+      // });
+      
+    }
+
+    if(urlParser.validUnstoppableRegex.test(url)){
+      console.log('Unstoppable domain detected', url);
+      return `wttp://${url}`;
+    }
+
+    if (url.startsWith('wttp://')) {
+      console.log('[DEBUG][urlParser] Detected wttp URL:', url);
+      return 'wttp://' + url.slice(7)
     }
 
     if (urlParser.isURL(url)) {
@@ -166,7 +170,7 @@ var urlParser = {
   },
   getDomain: function (url) {
     url = urlParser.removeProtocol(url);
-    return url.split(/[/:]/)[0].toLowerCase();
+    return url.split('/')[0].toLowerCase();
   },
   validateDomain: function (domain) {
     domain = urlParser.unicodeRegex.test(domain)
@@ -190,7 +194,68 @@ var urlParser = {
   isHTTPSUpgreadable: function (url) {
     const domain = removeWWW(urlParser.getDomain(url));
     return httpsTopSites.includes(domain);
+  },
+  removeTextFragment: function (url) {
+    try {
+      var parsedURL = new URL(url)
+      if (parsedURL.hash.startsWith('#:~:text=')) {
+        parsedURL.hash = ''
+        return parsedURL.toString()
+      }
+    } catch (e) {}
+    return url
   }
 };
 
+function toInternalWttpUrl(url) {
+  if (url.startsWith('wttp://')) {
+    console.log('[DEBUG][toInternalWttpUrl] Input:', url);
+  }
+  
+  // Only process URLs that are WTTP URLs or ETH/ENS addresses
+  // Don't convert relative paths or other protocols
+  if (!url.startsWith('wttp://') && !/^0x[a-fA-F0-9]{40}(:[a-zA-Z0-9_-]+)?$/.test(url) && !/^.+\.eth(:[a-zA-Z0-9_-]+)?$/.test(url)) {
+    return url; // Return as-is for relative paths and other protocols
+  }
+  
+  // If url is just an ETH address, make it a full WTTP URL
+  if (/^0x[a-fA-F0-9]{40}(:[a-zA-Z0-9_-]+)?$/.test(url)) {
+    url = `wttp://${url}/`;
+  }
+  
+  const match = url.match(/^wttp:\/\/([0-9a-zA-Z.:_-]+)(\/.*)?$/);
+  if (match) {
+    const host = match[1];
+    const path = match[2] || '/';
+    if (/^0x[a-fA-F0-9]{40}(:[a-zA-Z0-9_-]+)?$/.test(host) || /^.+\.eth(:[a-zA-Z0-9_-]+)?$/.test(host)) {
+      return `wttp://ca/${host}${path}`;
+    }
+  }
+  return url;
+}
+
+function toPrettyWttpUrl(url) {
+  const match = url.match(/^wttp:\/\/ca\/([0-9a-zA-Z.:_-]+)(\/.*)?$/);
+  if (match) {
+    const address = match[1];
+    const path = match[2] || '/';
+    return `wttp://${address}${path}`;
+  }
+  return url;
+}
+
+function toWttpUrl(input) {
+  // If input starts with wttp://, use as-is
+  if (input.startsWith('wttp://')) return input;
+  // If input matches ETH or ENS (with optional :chain), convert to wttp://<input>/
+  if (/^0x[a-fA-F0-9]{40}(:[a-zA-Z0-9_-]+)?$/.test(input) || /^.+\.eth(:[a-zA-Z0-9_-]+)?$/.test(input)) {
+    return `wttp://${input}/`;
+  }
+  // Otherwise, return as-is
+  return input;
+}
+
 module.exports = urlParser;
+module.exports.toInternalWttpUrl = toInternalWttpUrl;
+module.exports.toPrettyWttpUrl = toPrettyWttpUrl;
+module.exports.toWttpUrl = toWttpUrl;

@@ -1,4 +1,5 @@
 var urlParser = require('util/urlParser.js')
+const { toInternalWttpUrl, toPrettyWttpUrl } = require('util/urlParser.js');
 var settings = require('util/settings/settings.js')
 
 /* implements selecting webviews, switching between them, and creating new ones. */
@@ -30,16 +31,7 @@ function captureCurrentTab (options) {
 
 // called whenever a new page starts loading, or an in-page navigation occurs
 function onPageURLChange (tab, url) {
-  console.log(`webview: onPageURLChange url = ${url}`)
-
-  if (
-    url.indexOf('https://') === 0 || 
-    url.indexOf('web3://') === 0 || 
-    url.indexOf('about:') === 0 || 
-    url.indexOf('chrome:') === 0 || 
-    url.indexOf('file://') === 0 || 
-    url.indexOf('min://') === 0
-  ) {
+  if (url.indexOf('https://') === 0 || url.indexOf('about:') === 0 || url.indexOf('chrome:') === 0 || url.indexOf('file://') === 0 || url.indexOf('min://') === 0 || url.indexOf('wttp://') === 0) {
     tabs.update(tab, {
       secure: true,
       url: url
@@ -50,7 +42,7 @@ function onPageURLChange (tab, url) {
       url: url
     })
   }
-  console.log(`webview: onPageURLChange protocol = ${url.split(':')[0]}`)
+
   webviews.callAsync(tab, 'setVisualZoomLevelLimits', [1, 3])
 }
 
@@ -70,6 +62,12 @@ function onPageLoad (tabId) {
       captureCurrentTab()
     }, 250)
   }
+}
+
+function onFaviconChange (tabId, favicons) {
+  tabs.update(tabId, {
+    favicon: favicons[0]
+  })
 }
 
 function scrollOnLoad (tabId, scrollPosition) {
@@ -168,22 +166,26 @@ const webviews = {
         height: window.innerHeight
       }
     } else {
-      if (!hasSeparateTitlebar && (window.platformType === 'linux' || window.platformType === 'windows') && !windowIsMaximized && !windowIsFullscreen) {
-        var navbarHeight = 48
-      } else {
-        var navbarHeight = 36
+      // Calculate the total height of the tab bar and address bar bar
+      var navbarHeight = 0;
+      var addressBarBarHeight = 0;
+      var navbar = document.getElementById('navbar');
+      var addressBarBar = document.getElementById('address-bar-bar');
+      if (navbar) {
+        navbarHeight = navbar.getBoundingClientRect().height;
       }
-
-      const viewMargins = webviews.viewMargins
-
+      if (addressBarBar) {
+        addressBarBarHeight = addressBarBar.getBoundingClientRect().height;
+      }
+      const totalTopBarHeight = navbarHeight + addressBarBarHeight;
+      const viewMargins = webviews.viewMargins;
       let position = {
         x: 0 + Math.round(viewMargins[3]),
-        y: 0 + Math.round(viewMargins[0]) + navbarHeight,
+        y: 0 + Math.round(viewMargins[0]) + totalTopBarHeight,
         width: window.innerWidth - Math.round(viewMargins[1] + viewMargins[3]),
-        height: window.innerHeight - Math.round(viewMargins[0] + viewMargins[2]) - navbarHeight
-      }
-
-      return position
+        height: window.innerHeight - Math.round(viewMargins[0] + viewMargins[2]) - totalTopBarHeight
+      };
+      return position;
     }
   },
   add: function (tabId, existingViewId) {
@@ -216,10 +218,11 @@ const webviews = {
 
     if (!existingViewId) {
       if (tabData.url) {
-        ipc.send('loadURLInView', { id: tabData.id, url: urlParser.parse(tabData.url) })
+        let url = toInternalWttpUrl(tabData.url);
+        console.log('[DEBUG] About to load URL in view (add):', url);
+        ipc.send('loadURLInView', { id: tabData.id, url: urlParser.parse(url) });
       } else if (tabData.private) {
-        // workaround for https://github.com/minbrowser/min/issues/872
-        ipc.send('loadURLInView', { id: tabData.id, url: urlParser.parse('min://newtab') })
+        ipc.send('loadURLInView', { id: tabData.id, url: urlParser.parse('min://newtab') });
       }
     }
 
@@ -250,8 +253,10 @@ const webviews = {
     })
     webviews.emitEvent('view-shown', id)
   },
-  update: function (id, url) {
-    ipc.send('loadURLInView', { id: id, url: urlParser.parse(url) })
+  update: function (tabId, url) {
+    let internalUrl = toInternalWttpUrl(url);
+    console.log('[DEBUG] About to load URL in view (update):', internalUrl);
+    ipc.send('loadURLInView', { id: tabId, url: urlParser.parse(internalUrl) });
   },
   destroy: function (id) {
     webviews.emitEvent('view-hidden', id)
@@ -427,24 +432,10 @@ ipc.on('leave-full-screen', function () {
 webviews.bindEvent('did-start-navigation', onNavigate)
 webviews.bindEvent('will-redirect', onNavigate)
 webviews.bindEvent('did-navigate', function (tabId, url, httpResponseCode, httpStatusText) {
-  if (url.startsWith('web3://')) {
-    const contractAddress = url.replace('web3://', '');
-    fetchContractHTML(contractAddress)
-      .then(htmlData => {
-        if (htmlData) {
-          onPageURLChange(tabId, url);
-          webviews.callAsync(tabId, 'executeJavaScript', `document.open(); document.write(${JSON.stringify(htmlData)}); document.close();`);
-        } else {
-          onPageURLChange(tabId, chain.explorerPrefix + contractAddress);
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching contract HTML:', error);
-        onPageURLChange(tabId, chain.explorerPrefix + contractAddress);
-      });
-  } else {
-    onPageURLChange(tabId, url);
-  }
+  // If this is an internal WTTP URL, rewrite to pretty for display
+  let prettyUrl = typeof toPrettyWttpUrl === 'function' ? toPrettyWttpUrl(url) : url;
+  tabs.update(tabId, { url: prettyUrl });
+  onPageURLChange(tabId, prettyUrl);
 })
 
 webviews.bindEvent('did-finish-load', onPageLoad)
@@ -500,7 +491,7 @@ settings.listen(function () {
           // webview might not actually exist
         }
       }
-      if (tab.url.startsWith('web3://')) {
+      if (tab.url.startsWith('wttp://')) {
         try {
           webviews.callAsync(tab.id, 'send', ['receiveSettingsData', settings.list])
         } catch (e) {
@@ -523,48 +514,14 @@ webviews.bindIPC('downloadFile', function (tabId, args) {
   }
 })
 
-// webviews.bindIPC('getWeb3HTML', function (tabId, args) {
-//   if (tabs.get(tabId).url.startsWith('web3://')) {
-//     webviews.callAsync(tabId, 'contractHTML', [args[0]])
-//   }
-// })
-
-ipc.on('view-event', function (e, args) {
-  webviews.emitEvent(args.event, args.tabId, args.args)
+ipc.on('view-event', function (e, data) {
+  webviews.emitEvent(data.event, data.tabId, data.args)
 })
 
 ipc.on('async-call-result', function (e, args) {
   webviews.asyncCallbacks[args.callId](args.error, args.result)
   delete webviews.asyncCallbacks[args.callId]
 })
-
-// const { ipcRenderer } = require('electron');
-
-// ipcRenderer.on('renderHTMLInView', function (e, htmlData) {
-//   console.log("WORKING");
-//   console.log(htmlData.ca);
-  
-//   const tabId = getCurrentTabId();
-//   console.log(tabId);
-//   console.log(webviews.hasViewForTab(tabId));
-
-//   if (tabId && webviews.hasViewForTab(tabId)) {
-//     // const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(htmlData)}`;
-//     const newURL = `web3://${htmlData.ca}`;
-//     tabs.update(tabId, { url: newURL });
-//     console.log(htmlData + "HtmlDATA")
-//     webviews.callAsync(tabId, 'executeJavaScript', `document.open(); document.write(${JSON.stringify(htmlData.htmlData )}); document.close();`, () => {
-//       console.log("HTML loaded, sending event to main process");
-//       ipcRenderer.send('htmlLoaded', tabId);
-//     });
-//     //   webviews.callAsync(tabId, 'loadURL', `data:text/html;charset=utf-8,${encodeURIComponent(htmlData.htmlData )}`, () => {
-//     //   console.log("HTML loaded, sending event to main process");
-//     //   ipcRenderer.send('htmlLoaded', tabId);
-//     // });
-//   } else {
-//     console.error('Tab ID not found or invalid');
-//   }
-// });
 
 function getCurrentTabId() {
   const currentTabId = tabs.getSelected();
@@ -602,6 +559,11 @@ ipc.on('windowFocus', function () {
   if (webviews.placeholderRequests.length === 0 && document.activeElement.tagName !== 'INPUT') {
     webviews.focus()
   }
+})
+
+webviews.bindEvent('page-favicon-updated', onFaviconChange)
+webviews.bindEvent('did-navigate-in-page', function (tabId, url, isMainFrame) {
+  onPageURLChange(tabId, url)
 })
 
 module.exports = webviews

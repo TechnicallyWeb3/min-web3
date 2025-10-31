@@ -27,13 +27,17 @@
     "goBack": "Go Back",
     "goForward": "Go Forward",
     "inspectElement": "Inspect Element",
+    "translatePage": "Translate Page",
     /* searchbar */
+    "placesPluginOpenAgain": "Open Again",
+    "placesPluginSwitchToTab": "Switch to Tab",
+    "placesPluginSwitchToTask": "Switch to \"%t\"", // %t is replaced with the name of a task
     "pasteAndGo": "Paste and Go", //context menu item
     "DDGAnswerSubtitle": "Answer", //this is a noun - it is used as a subtitle when displaying Instant Answers from DuckDuckGo in the searchbar
     "suggestedSite": "Suggested site", //this is used to label suggested websites from the DuckDuckGo API,
     "resultsFromDDG": "Results from DuckDuckGo", //this is used as a label to indicate which results come from DuckDuckGo's API
     "taskN": "Task %n", //this is used as a way to identify which tab a task is in "task 1", "task 2", ...
-    /* custom !bangs
+    /* custom commands
         these are some of the items that show up when you press ! in the searchbar.
         Each one of these strings describes what the command will do when you run it. */
     "showMoreBangs": "Show more",
@@ -127,7 +131,7 @@
     "sessionRestoreErrorExplanation": "Your saved tabs couldn't be restored correctly.",
     "sessionRestoreErrorBackupInfo": "We've saved a backup of your data at this location: %l.", //%l will be replaced with a path to a file
     "sessionRestoreErrorLinkInfo": {
-      "unsafeHTML": "If this error continues to occur, please open a new issue <a href=\"https://github.com/minbrowser/min\" target=\"_blank\">here</a>."
+    "unsafeHTML": "If this error continues to occur, please open a new issue <a href=\"https://github.com/minbrowser/min\" target=\"_blank\">here</a>."
     },
     /* pages/settings/index.html */
     "settingsPreferencesHeading": "Preferences",
@@ -142,8 +146,8 @@
     "settingsBlockedRequestCount": {
       "unsafeHTML": "So far, Min has blocked <strong></strong> ads and trackers."
     },
-    "settingsCustomBangs": "Custom bangs",
-    "settingsCustomBangsAdd": "Add custom bang",
+    "settingsCustomBangs": "Custom Commands",
+    "settingsCustomBangsAdd": "Add new command",
     "settingsCustomBangsPhrase": "Phrase (Required)",
     "settingsCustomBangsSnippet": "Description (Optional)",
     "settingsCustomBangsRedirect": "Redirect URL (Required)",
@@ -296,6 +300,10 @@
     "savedPasswordsEmpty": "No saved passwords.",
     "savedPasswordsNeverSavedLabel": "Never saved",
     "deletePassword": "Delete password for %s?",
+    "exportCredentials": "Export credentials",
+    "importCredentials": "Import credentials",
+    "exportCredentialsConfirmation": "Your exported credentials will be saved in a file in plain text. When you're done using this file, you should delete it. Are you sure you want to continue?",
+    "importCredentialsConfirmation": "Importing passwords will overwrite any existing passwords for the same sites. Are you sure you want to continue?",
     /* Dialogs */
     "loginPromptTitle": "Sign in to %h", //%h is replaced with host, %r with realm (title of protected part of site)
     "dialogConfirmButton": "Confirm",

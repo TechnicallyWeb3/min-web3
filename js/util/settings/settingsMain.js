@@ -53,7 +53,9 @@ var settings = {
     settings.runChangeCallbacks(key)
 
     windows.getAll().forEach(function (win) {
-      win.webContents.send('settingChanged', key, value)
+      if (win && win.webContents && typeof win.webContents.send === 'function') {
+        win.webContents.send('settingChanged', key, value)
+      }
     })
   },
   initialize: function (userDataPath) {
@@ -75,9 +77,12 @@ var settings = {
       settings.writeFile()
       settings.runChangeCallbacks(key)
 
+      const senderId = e && e.sender && e.sender.id
       windows.getAll().forEach(function (win) {
-        if (win.webContents.id !== e.sender.id) {
-          win.webContents.send('settingChanged', key, value)
+        if (win && win.webContents && typeof win.webContents.send === 'function') {
+          if (!senderId || win.webContents.id !== senderId) {
+            win.webContents.send('settingChanged', key, value)
+          }
         }
       })
     })

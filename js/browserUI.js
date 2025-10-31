@@ -10,7 +10,6 @@ var settings = require('util/settings/settings.js')
 var webviews = require('webviews.js')
 var focusMode = require('focusMode.js')
 var tabBar = require('navbar/tabBar.js')
-var tabEditor = require('navbar/tabEditor.js')
 var searchbar = require('searchbar/searchbar.js')
 
 /* creates a new task */
@@ -33,8 +32,14 @@ function addTask () {
 options
   options.enterEditMode - whether to enter editing mode when the tab is created. Defaults to true.
   options.openInBackground - whether to open the tab without switching to it. Defaults to false.
+  options.url - the URL to open in the new tab.
 */
-function addTab (tabId = tabs.add(), options = {}) {
+function addTab (options = {}) {
+  var tabId = tabs.add({
+    url: options.url || null,
+    private: options.private || false
+  })
+
   /*
   adding a new tab should destroy the current one if either:
   * The current tab is an empty, non-private tab, and the new tab is private
@@ -50,11 +55,8 @@ function addTab (tabId = tabs.add(), options = {}) {
 
   if (!options.openInBackground) {
     switchToTab(tabId, {
-      focusWebview: options.enterEditMode === false
+      focusWebview: false // focus the address bar by default
     })
-    if (options.enterEditMode !== false) {
-      tabEditor.show(tabId)
-    }
   } else {
     tabBar.getTab(tabId).scrollIntoView()
   }
@@ -197,12 +199,17 @@ function switchToTab (id, options) {
     focus: options.focusWebview !== false
   })
 
-  tabEditor.hide()
+  const addressBar = document.getElementById('address-bar')
 
   if (!tabs.get(id).url) {
     document.body.classList.add('is-ntp')
+    addressBar.value = ''
+    if (options.focusWebview === false) {
+      addressBar.focus()
+    }
   } else {
     document.body.classList.remove('is-ntp')
+    addressBar.value = tabs.get(id).url
   }
 }
 
@@ -213,24 +220,16 @@ tasks.on('tab-updated', function (id, key) {
 })
 
 webviews.bindEvent('did-create-popup', function (tabId, popupId, initialURL) {
-  var popupTab = tabs.add({
-    // in most cases, initialURL will be overwritten once the popup loads, but if the URL is a downloaded file, it will remain the same
+  addTab({
     url: initialURL,
     private: tabs.get(tabId).private
   })
-  tabBar.addTab(popupTab)
-  webviews.add(popupTab, popupId)
-  switchToTab(popupTab)
 })
 
 webviews.bindEvent('new-tab', function (tabId, url, openInForeground) {
-  var newTab = tabs.add({
+  addTab({
     url: url,
-    private: tabs.get(tabId).private // inherit private status from the current tab
-  })
-
-  addTab(newTab, {
-    enterEditMode: false,
+    private: tabs.get(tabId).private, // inherit private status from the current tab
     openInBackground: !settings.get('openTabsInForeground') && !openInForeground
   })
 })
@@ -254,17 +253,13 @@ searchbar.events.on('url-selected', function (data) {
   }
 
   if (data.background) {
-    var newTab = tabs.add({
+    addTab({
       url: data.url,
-      private: tabs.get(tabs.getSelected()).private
-    })
-    addTab(newTab, {
-      enterEditMode: false,
+      private: tabs.get(tabs.getSelected()).private,
       openInBackground: true
     })
   } else {
     webviews.update(tabs.getSelected(), data.url)
-    tabEditor.hide()
   }
 })
 
@@ -279,8 +274,121 @@ tabBar.events.on('tab-closed', function (id) {
 ipc.on('focusWebview', function (e, tabId) {
   console.log("Received focusWebview event in browserUI", tabId);
   webviews.focus(tabId);
-  tabEditor.hide();
 });
+
+// Persistent Address Bar and Navigation Buttons Logic
+
+document.addEventListener('DOMContentLoaded', function () {
+  const addressBar = document.getElementById('address-bar');
+  const navBack = document.getElementById('nav-back');
+  const navForward = document.getElementById('nav-forward');
+  const navReload = document.getElementById('nav-reload');
+  const navHome = document.getElementById('nav-home');
+  const bookmarkBtn = document.getElementById('bookmark-btn');
+  const securityIcon = document.getElementById('security-icon');
+
+  // Helper to update address bar with current tab's URL
+  function updateAddressBar() {
+    const tab = tabs.get(tabs.getSelected());
+    if (!tab) return;
+    // Prefer prettyUrl if available
+    addressBar.value = tab.prettyUrl || tab.url || '';
+    // Optionally update security icon (locked/unlocked)
+    if (tab.secure === false) {
+      securityIcon.className = 'i carbon:unlocked';
+      securityIcon.title = 'Not Secure';
+    } else {
+      securityIcon.className = 'i carbon:locked';
+      securityIcon.title = 'Secure';
+    }
+  }
+
+  // Update address bar on tab switch and tab update
+  tabBar.events.on('tab-selected', updateAddressBar);
+  tasks.on('tab-updated', function (id, key) {
+    if (id === tabs.getSelected() && (key === 'url' || key === 'secure')) {
+      updateAddressBar();
+    }
+  });
+
+  // On Enter in address bar, navigate current tab
+  addressBar.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      let prettyUrl = addressBar.value.trim();
+
+      // If user entered just an ETH address or ENS name, rewrite to wttp://<address>/
+      if (/^0x[a-fA-F0-9]{40}$/.test(prettyUrl) || /\.eth$/.test(prettyUrl)) {
+        prettyUrl = `wttp://${prettyUrl}/`;
+      }
+
+      let internalUrl = (urlParser.toInternalWttpUrl || toInternalWttpUrl)(prettyUrl);
+      webviews.update(tabs.getSelected(), internalUrl);
+      // Store the pretty URL for this tab
+      tabs.update(tabs.getSelected(), { prettyUrl: prettyUrl });
+    }
+  });
+
+  // Navigation buttons
+  navBack.addEventListener('click', function () {
+    webviews.callAsync(tabs.getSelected(), 'goBack');
+  });
+  navForward.addEventListener('click', function () {
+    webviews.callAsync(tabs.getSelected(), 'goForward');
+  });
+  navReload.addEventListener('click', function () {
+    webviews.callAsync(tabs.getSelected(), 'reload');
+  });
+  navHome.addEventListener('click', function () {
+    // You can set your home page here
+    webviews.update(tabs.getSelected(), settings.get('homePage') || 'min://newtab');
+  });
+
+  // Bookmark button (toggle bookmark)
+  bookmarkBtn.addEventListener('click', function () {
+    // Implement bookmark logic here if needed
+    // For now, just a placeholder
+    alert('Bookmark feature coming soon!');
+  });
+
+  // Initial sync
+  updateAddressBar();
+
+  // Dynamically set CSS variables for bar heights
+  function setBarHeightsVars() {
+    const topBar = document.getElementById('top-bar');
+    const addressBarBar = document.getElementById('address-bar-bar');
+    document.body.style.setProperty('--top-bar-height', topBar ? topBar.offsetHeight + 'px' : '0px');
+    document.body.style.setProperty('--address-bar-bar-height', addressBarBar ? addressBarBar.offsetHeight + 'px' : '0px');
+  }
+  setBarHeightsVars();
+  window.addEventListener('resize', setBarHeightsVars);
+  window.addEventListener('load', setBarHeightsVars);
+});
+
+// Ensure webview is correctly sized after all UI is rendered
+window.addEventListener('load', function () {
+  if (window.webviews && typeof window.webviews.resize === 'function') {
+    window.webviews.resize();
+    setTimeout(function() {
+      window.webviews.resize();
+    }, 100);
+  }
+});
+
+// Delegate to shared URL helpers (supports ENS, contract addresses, and optional :chain)
+function toInternalWttpUrl(url) {
+  if (urlParser && typeof urlParser.toInternalWttpUrl === 'function') {
+    return urlParser.toInternalWttpUrl(url);
+  }
+  return url; // fallback no-op
+}
+
+function toPrettyWttpUrl(url) {
+  if (urlParser && typeof urlParser.toPrettyWttpUrl === 'function') {
+    return urlParser.toPrettyWttpUrl(url);
+  }
+  return url; // fallback no-op
+}
 
 module.exports = {
   addTask,
