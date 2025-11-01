@@ -316,9 +316,11 @@ document.addEventListener('DOMContentLoaded', function () {
     if (e.key === 'Enter') {
       let prettyUrl = addressBar.value.trim();
 
-      // If user entered just an ETH address or ENS name, rewrite to wttp://<address>/
-      if (/^0x[a-fA-F0-9]{40}$/.test(prettyUrl) || /\.eth$/.test(prettyUrl)) {
-        prettyUrl = `wttp://${prettyUrl}/`;
+      // If user entered just an ETH address or ENS name (and doesn't already have wttp://), rewrite to wttp://<address>/
+      if (!prettyUrl.startsWith('wttp://') && !prettyUrl.startsWith('http://') && !prettyUrl.startsWith('https://')) {
+        if (/^0x[a-fA-F0-9]{40}$/.test(prettyUrl) || /\.eth$/.test(prettyUrl)) {
+          prettyUrl = `wttp://${prettyUrl}/`;
+        }
       }
 
       let internalUrl = (urlParser.toInternalWttpUrl || toInternalWttpUrl)(prettyUrl);

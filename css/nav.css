@@ -89,7 +89,7 @@
     top: 50%;
     transform: translateY(-50%);
     font-size: 1.1em;
-    color: #4caf50;
+    color: #888888;
     pointer-events: none;
     z-index: 10;
     background: transparent;
@@ -240,7 +240,7 @@
     min-width: 28px;
     text-align: center;
     font-size: 1.15em;
-    color: #4caf50;
+    color: #888888;
     pointer-events: none;
     z-index: 10;
     background: transparent;

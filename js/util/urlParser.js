@@ -74,13 +74,19 @@ var urlParser = {
       return 'min://app/pages/' + urlChunks[0] + (urlChunks[1] ? urlChunks.slice(1).join('/') : '/index.html') + (query ? '?' + query : '');
     }
 
+    // Check for wttp:// URLs first to avoid duplicating the protocol
+    if (url.startsWith('wttp://')) {
+      console.log('[DEBUG][urlParser] Detected wttp URL:', url);
+      return 'wttp://' + url.slice(7)
+    }
+
     const contractAddress = urlParser.removeProtocol(url);
     if (urlParser.validWeb3Regex.test(contractAddress)) {
       return `wttp://${contractAddress}`;
     }
 
-    // Check for ENS domains
-    if (urlParser.validENSRegex.test(url)) {
+    // Check for ENS domains (only if URL doesn't already have a protocol)
+    if (!urlParser.protocolRegex.test(url) && urlParser.validENSRegex.test(url)) {
       console.log('ENS domain detected', url);
       return `wttp://${url}`;
       // return getENSOwner(url).then((owner) => {
@@ -90,14 +96,10 @@ var urlParser = {
       
     }
 
-    if(urlParser.validUnstoppableRegex.test(url)){
+    // Check for Unstoppable domains (only if URL doesn't already have a protocol)
+    if (!urlParser.protocolRegex.test(url) && urlParser.validUnstoppableRegex.test(url)){
       console.log('Unstoppable domain detected', url);
       return `wttp://${url}`;
-    }
-
-    if (url.startsWith('wttp://')) {
-      console.log('[DEBUG][urlParser] Detected wttp URL:', url);
-      return 'wttp://' + url.slice(7)
     }
 
     if (urlParser.isURL(url)) {
