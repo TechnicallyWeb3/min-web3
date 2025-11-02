@@ -125,16 +125,14 @@ const sessionRestore = {
 
       if (tasks.getSelected().tabs.isEmpty() || startupConfigOption === 1) {
         browserUI.switchToTask(mostRecentTasks[0].id)
-        if (tasks.getSelected().tabs.isEmpty()) {
-          tabEditor.show(tasks.getSelected().tabs.getSelected())
-        }
+        // No longer show tab editor - we have a persistent address bar
       } else {
         window.createdNewTaskOnStartup = true
         // try to reuse a previous empty task
         var lastTask = tasks.byIndex(tasks.getLength() - 1)
         if (lastTask && lastTask.tabs.isEmpty() && !lastTask.name) {
           browserUI.switchToTask(lastTask.id)
-          tabEditor.show(lastTask.tabs.getSelected())
+          // No longer show tab editor - we have a persistent address bar
         } else {
           browserUI.addTask()
         }
@@ -208,7 +206,7 @@ const sessionRestore = {
       })
     if (newTaskCandidates.length > 0) {
       browserUI.switchToTask(newTaskCandidates[0].id)
-      tabEditor.show(tasks.getSelected().tabs.getSelected())
+      // No longer show tab editor - we have a persistent address bar
     } else {
       browserUI.addTask()
     }

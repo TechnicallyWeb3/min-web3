@@ -12,6 +12,7 @@ const modules = [
   'main/registryConfig.js',
   'js/util/settings/settingsMain.js',
   'main/main.js',
+  'main/wttpHandler.js',
   'main/minInternalProtocol.js',
   'main/filtering.js',
   'main/viewManager.js',

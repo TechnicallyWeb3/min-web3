@@ -2,8 +2,8 @@ const { pathToFileURL } = require('url')
 
 // const { WTTPHandler } = require('@wttp/handler');
 // const mime = require('mime-types');
-// Use absolute path at runtime (main.build.js lives at project root)
-const { registerWttpProtocol } = require(__dirname + '/main/wttpHandler.js');
+// Note: registerWttpProtocol is defined in wttpHandler.js which comes before this file in the build bundle
+// No need to require it since files are concatenated together
 // const { handleWttpRequest } = require('./wttpHandler.js');
 
 // Store current site per session (in-memory, not persistent)

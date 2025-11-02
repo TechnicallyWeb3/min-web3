@@ -138,7 +138,8 @@
     color: #fff176;
   }
   
-  #add-tab-button, #new-tab-btn {
+  /* New tab button in address bar (removed, now in tabs) */
+  #new-tab-btn {
     flex: 0 0 auto;
     min-width: 40px;
     max-width: 40px;
@@ -152,8 +153,37 @@
     color: #fff;
     border: none;
   }
-  #add-tab-button:hover, #new-tab-btn:hover {
+  #new-tab-btn:hover {
     background: #444;
+  }
+  
+  /* New tab button next to tabs (Chrome/Edge style) - inside tabs-inner so it appears right after tabs */
+  #tabs #tabs-inner #add-tab-button {
+    flex: 0 0 auto;
+    min-width: 28px;
+    width: 28px;
+    height: 28px;
+    margin: auto 4px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    color: inherit;
+    cursor: pointer;
+    font-size: 1.2em;
+    transition: background-color 0.15s ease;
+    align-self: center;
+    flex-shrink: 0;
+  }
+  #tabs #add-tab-button:hover {
+    background: rgba(0, 0, 0, 0.1);
+  }
+  .dark-theme #tabs #add-tab-button:hover,
+  body.dark-mode #tabs #add-tab-button:hover {
+    background: rgba(255, 255, 255, 0.1);
   }
   
   #tabs-inner {

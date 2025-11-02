@@ -251,6 +251,9 @@ const tabBar = {
     }
   },
   updateAll: function () {
+    // Save the button reference before emptying
+    let addTabBtn = document.getElementById('add-tab-button')
+    
     empty(tabBar.containerInner)
     tabBar.tabElementMap = {}
 
@@ -260,8 +263,7 @@ const tabBar = {
       tabBar.tabElementMap[tab.id] = el
     })
 
-    // Always create and append the add-tab-button at the end
-    let addTabBtn = document.getElementById('add-tab-button')
+    // Re-add the button as the last child (after all tabs)
     if (addTabBtn) {
       tabBar.containerInner.appendChild(addTabBtn)
     }
@@ -270,16 +272,31 @@ const tabBar = {
       tabBar.setActiveTab(tabs.getSelected())
     }
     tabBar.handleSizeChange()
-
-    // Auto-scroll to end to keep add-tab-button visible
-    tabBar.containerInner.scrollLeft = tabBar.containerInner.scrollWidth
   },
   addTab: function (tabId) {
     var tab = tabs.get(tabId)
     var index = tabs.getIndex(tabId)
 
     var tabEl = tabBar.createTab(tab)
-    tabBar.containerInner.insertBefore(tabEl, tabBar.containerInner.childNodes[index])
+    // Insert before the button (if it exists) or at the calculated index
+    let addTabBtn = document.getElementById('add-tab-button')
+    let children = Array.from(tabBar.containerInner.children).filter(child => child.id !== 'add-tab-button')
+    
+    if (addTabBtn && addTabBtn.parentNode === tabBar.containerInner && index >= children.length) {
+      // Insert right before the button if adding at the end
+      tabBar.containerInner.insertBefore(tabEl, addTabBtn)
+    } else if (index < children.length) {
+      // Insert at the specified index
+      tabBar.containerInner.insertBefore(tabEl, children[index])
+    } else {
+      // Fallback: append before button or at end
+      if (addTabBtn && addTabBtn.parentNode === tabBar.containerInner) {
+        tabBar.containerInner.insertBefore(tabEl, addTabBtn)
+      } else {
+        tabBar.containerInner.appendChild(tabEl)
+      }
+    }
+    
     tabBar.tabElementMap[tabId] = tabEl
     tabBar.handleSizeChange()
 
@@ -345,7 +362,9 @@ const tabBar = {
     })
   },
   handleSizeChange: function () {
-    if (window.innerWidth / tabBar.containerInner.childNodes.length < 190) {
+    // Exclude the button from child count for size calculations
+    let tabCount = Array.from(tabBar.containerInner.children).filter(child => child.id !== 'add-tab-button').length
+    if (window.innerWidth / tabCount < 190) {
       tabBar.container.classList.add('compact-tabs')
     } else {
       tabBar.container.classList.remove('compact-tabs')

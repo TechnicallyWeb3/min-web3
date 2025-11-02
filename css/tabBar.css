@@ -87,10 +87,12 @@ body.linux #menu-button {
   position: relative;
   overflow: hidden;
   background-color: rgba(0, 0, 0, 0.15);
+  align-items: center;
 }
 #tabs #tabs-inner {
   display: flex;
   flex: 1;
+  min-width: 0;
   overflow-x: auto;
   overflow-y: hidden;
   transition: margin 0.12s cubic-bezier(0.4, 0.2, 0.2, 1),

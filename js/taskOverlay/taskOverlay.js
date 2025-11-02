@@ -34,7 +34,7 @@ function addTaskFromMenu () {
   taskOverlay.show()
   setTimeout(function () {
     taskOverlay.hide()
-    tabEditor.show(tabs.getSelected())
+    // No longer show tab editor - we have a persistent address bar
   }, 600)
 }
 
@@ -410,7 +410,7 @@ var taskOverlay = {
     addTaskButton.addEventListener('click', function (e) {
       browserUI.addTask()
       taskOverlay.hide()
-      tabEditor.show(tabs.getSelected())
+      // No longer show tab editor - we have a persistent address bar
     })
 
     taskOverlayNavbar.addEventListener('click', function () {
