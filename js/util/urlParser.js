@@ -4,11 +4,7 @@ const searchEngine = require('util/searchEngine.js');
 const hosts = require('./hosts.js');
 const httpsTopSites = require('../../ext/httpsUpgrade/httpsTopSites.json');
 const publicSuffixes = require('../../ext/publicSuffixes/public_suffix_list.json');
-// const { fetchContractHTML } = require('./web3Helpers.js');
 const { ipcRenderer } = require('electron');
-
-
-const showExplorer = false;
 
 function removeWWW(domain) {
   return (domain.startsWith('www.') ? domain.slice(4) : domain);
@@ -74,10 +70,9 @@ var urlParser = {
       return 'min://app/pages/' + urlChunks[0] + (urlChunks[1] ? urlChunks.slice(1).join('/') : '/index.html') + (query ? '?' + query : '');
     }
 
-    // Check for wttp:// URLs first to avoid duplicating the protocol
+    // Check for wttp:// URLs first - return as-is
     if (url.startsWith('wttp://')) {
-      console.log('[DEBUG][urlParser] Detected wttp URL:', url);
-      return 'wttp://' + url.slice(7)
+      return url;
     }
 
     const contractAddress = urlParser.removeProtocol(url);
@@ -89,11 +84,6 @@ var urlParser = {
     if (!urlParser.protocolRegex.test(url) && urlParser.validENSRegex.test(url)) {
       console.log('ENS domain detected', url);
       return `wttp://${url}`;
-      // return getENSOwner(url).then((owner) => {
-      //   console.log(owner + "Returned here");
-      //   return `web://${owner}`
-      // });
-      
     }
 
     // Check for Unstoppable domains (only if URL doesn't already have a protocol)

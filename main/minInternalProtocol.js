@@ -1,41 +1,7 @@
 const { pathToFileURL } = require('url')
 
-// const { WTTPHandler } = require('@wttp/handler');
-// const mime = require('mime-types');
 // Note: registerWttpProtocol is defined in wttpHandler.js which comes before this file in the build bundle
 // No need to require it since files are concatenated together
-// const { handleWttpRequest } = require('./wttpHandler.js');
-
-// Store current site per session (in-memory, not persistent)
-// const sessionCurrentSite = new Map();
-
-// Helper: Return a simple HTML error page
-// function getErrorPage(siteAddress) {
-// 	return `<html><body><h1>404 Not Found</h1><p>Site: ${siteAddress}</p></body></html>`;
-// }
-
-// Helper: Validate Ethereum address
-// function isValidEthAddress(addr) {
-// 	return /^0x[a-fA-F0-9]{40}(:[a-zA-Z0-9_-]+)?$/.test(addr);
-// }
-// Helper: Validate ENS name
-// function isValidEnsName(addr) {
-// 	return /^.+\.eth(:[a-zA-Z0-9_-]+)?$/.test(addr);
-// }
-// Helper: Get session ID
-// function getSessionId(ses) {
-// 	return ses && ses.id ? ses.id : 'default';
-// }
-// Helper: Get site address from URL object
-// function getSiteAddressFromUrl(urlObj) {
-// 	return urlObj.hostname;
-// }
-// Helper: Get file path from URL object
-// function getFilePathFromUrl(urlObj) {
-// 	let filePath = urlObj.pathname || '';
-// 	if (filePath.startsWith('/')) filePath = filePath.slice(1);
-// 	return filePath;
-// }
 
 protocol.registerSchemesAsPrivileged([
 	{
