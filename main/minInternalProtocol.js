@@ -13,19 +13,9 @@ protocol.registerSchemesAsPrivileged([
 		}
 	},
 	{
-		scheme: 'web3',
-		privileges: {
-			standard: true,
-			secure: true,
-			supportFetchAPI: true,
-			corsEnabled: true,
-			stream: true
-		}
-	},
-	{
 		scheme: 'wttp',
 		privileges: {
-			standard: false,
+			standard: true,
 			secure: true,
 			allowServiceWorkers: true,
 			supportFetchAPI: true,

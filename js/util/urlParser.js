@@ -23,7 +23,7 @@ var urlParser = {
   validUnstoppableRegex: new RegExp(`^([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+(?:${unstoppableTLDs.join('|')})$`, 'i'),
   validENSRegex: /^([a-z0-9-]+\.)*[a-z0-9-]+\.eth$/i,
   unicodeRegex: /[^\u0000-\u00ff]/,
-  removeProtocolRegex: /^(https?|file|web3):\/\//i,
+  removeProtocolRegex: /^(https?|file):\/\//i,
   protocolRegex: /^[a-z0-9]+:\/\//,
   isURL: function (url) {
     return urlParser.protocolRegex.test(url) || url.indexOf('about:') === 0 || url.indexOf('chrome:') === 0 || url.indexOf('data:') === 0;

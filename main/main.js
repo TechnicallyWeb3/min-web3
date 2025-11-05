@@ -447,7 +447,7 @@ ipc.on('showSecondaryMenu', function (event, data) {
 })
 
 ipc.on('handoffUpdate', function(e, data) {
-  if (app.setUserActivity && data.url && (data.url.startsWith('http') || data.url.startsWith('web3'))) { // (data.url.startsWith('http') || data.url.startsWith('web3'))
+  if (app.setUserActivity && data.url && (data.url.startsWith('http') || data.url.startsWith('wttp'))) {
     console.log(`IPC:handoffUpdate(${data.url})`)
     app.setUserActivity('NSUserActivityTypeBrowsingWeb', {}, data.url)
   } else if (app.invalidateCurrentActivity) {
